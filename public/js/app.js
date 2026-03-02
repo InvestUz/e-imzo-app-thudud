@@ -344,9 +344,9 @@ function signDocument(documentId) {
         });
 }
 
-// Initialize on DOM ready
+// Initialize on DOM ready - runs on any page with the E-IMZO key dropdown
 document.addEventListener('DOMContentLoaded', function() {
-    if (typeof CAPIWS !== 'undefined') {
+    if (typeof CAPIWS !== 'undefined' && document.getElementById('eimzo-keys')) {
         AppLoad();
     }
 });

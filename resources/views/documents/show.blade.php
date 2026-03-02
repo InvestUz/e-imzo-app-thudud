@@ -60,7 +60,7 @@
                     @endif
                     <tr>
                         <td class="text-muted">Imzolangan sana:</td>
-                        <td>{{ $document->signed_at->format('d.m.Y H:i:s') }}</td>
+                        <td>{{ $document->signed_at->setTimezone(config('app.timezone'))->format('d.m.Y H:i:s') }}</td>
                     </tr>
                 </table>
                 @endif
@@ -128,6 +128,7 @@
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // QR code
     var qr = qrcode(0, 'M');
     qr.addData('{{ $document->getVerificationUrl() }}');
     qr.make();
