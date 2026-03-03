@@ -3,94 +3,123 @@
 @section('title', 'Bosh sahifa')
 
 @section('content')
-<div class="row">
-    <div class="col-md-8">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">Xush kelibsiz, {{ auth()->user()->name }}!</h5>
-            </div>
-            <div class="card-body">
-                <p>Siz E-IMZO orqali muvaffaqiyatli kirdingiz.</p>
+@php
+    use App\Models\Application;
+    use App\Models\ApplicationApproval;
+    $user = auth()->user();
 
-                <div class="row mt-4">
-                    <div class="col-md-6">
-                        <div class="card bg-light">
-                            <div class="card-body text-center">
-                                <h3 class="text-primary">{{ auth()->user()->documents()->count() }}</h3>
-                                <p class="text-muted mb-0">Jami hujjatlar</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card bg-light">
-                            <div class="card-body text-center">
-                                <h3 class="text-success">{{ auth()->user()->documents()->whereNotNull('signed_at')->count() }}</h3>
-                                <p class="text-muted mb-0">Imzolangan hujjatlar</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    if ($user->isAdmin()) {
+        $total     = Application::count();
+        $approved  = Application::where('status','approved')->count();
+        $pending   = Application::whereNotIn('status',['approved','rejected'])->count();
+        $rejected  = Application::where('status','rejected')->count();
+        $myPending = 0;
+    } else {
+        $total     = Application::where('district_id', $user->district_id)->count();
+        $approved  = Application::where('district_id', $user->district_id)->where('status','approved')->count();
+        $pending   = Application::where('district_id', $user->district_id)->whereNotIn('status',['approved','rejected'])->count();
+        $rejected  = Application::where('district_id', $user->district_id)->where('status','rejected')->count();
+        $myPending = ApplicationApproval::where('step_role', $user->role)->where('status','pending')
+                        ->whereHas('application', fn($q) => $q->where('district_id', $user->district_id))->count();
+        if ($user->is_regional_backup) {
+            $myPending = ApplicationApproval::where('step_role', $user->role)->where('status','pending')->count();
+        }
+    }
+@endphp
 
-                <div class="mt-4">
-                    <a href="{{ route('documents.create') }}" class="btn btn-primary">
-                        Yangi hujjat yaratish
-                    </a>
-                    <a href="{{ route('documents.index') }}" class="btn btn-outline-primary">
-                        Hujjatlarni ko'rish
-                    </a>
+{{-- Welcome --}}
+<div style="margin-bottom:20px">
+    <div style="font-size:1.1rem;font-weight:700;color:#15191e">
+        Xush kelibsiz, {{ $user->name }}
+    </div>
+    <div style="font-size:0.85rem;color:#6e788b;margin-top:3px">
+        @if($user->district){{ $user->district->name_uz }} &nbsp;·&nbsp; @endif
+        {{ \App\Models\ApplicationApproval::ROLE_LABELS[$user->role] ?? $user->role }}
+        @if($user->is_regional_backup)
+        &nbsp;<span style="background:#fff3cd;color:#9a6800;font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:10px">⚡ Mintaqaviy zaxira</span>
+        @endif
+    </div>
+</div>
+
+{{-- Stat cards --}}
+<div class="stat-cards-row">
+    <div class="stat-card-p sc-teal">
+        <div class="sc-label">Jami arizalar</div>
+        <div class="sc-value">{{ $total }}</div>
+    </div>
+    <div class="stat-card-p sc-orange">
+        <div class="sc-label">Ko'rib chiqilmoqda</div>
+        <div class="sc-value">{{ $pending }}</div>
+    </div>
+    <div class="stat-card-p sc-green-dk">
+        <div class="sc-label">Tasdiqlangan</div>
+        <div class="sc-value">{{ $approved }}</div>
+    </div>
+    <div class="stat-card-p sc-red">
+        <div class="sc-label">Rad etilgan</div>
+        <div class="sc-value">{{ $rejected }}</div>
+    </div>
+</div>
+
+{{-- Quick links + info --}}
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="block">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#aab0bb;margin-bottom:16px">Tez o'tish</div>
+
+            @if(!$user->isConsumer())
+            <a href="{{ route('applications.inbox') }}" class="quick-link">
+                <div class="quick-link-icon ql-yellow">📥</div>
+                <div class="quick-link-info">
+                    <strong>Kiruvchi arizalar</strong>
+                    <span>Sizni kutayotgan: {{ $myPending }} ta</span>
                 </div>
-            </div>
+                @if($myPending > 0)
+                <span class="sbadge sbadge-warning ms-auto">{{ $myPending }}</span>
+                @endif
+            </a>
+            @endif
+
+            <a href="{{ route('applications.index') }}" class="quick-link">
+                <div class="quick-link-icon ql-teal">📋</div>
+                <div class="quick-link-info">
+                    <strong>Arizalar ro'yxati</strong>
+                    <span>Qidirish va ko'rish</span>
+                </div>
+            </a>
+
+            @if($user->isAdmin())
+            <a href="{{ route('applications.create') }}" class="quick-link">
+                <div class="quick-link-icon ql-green">➕</div>
+                <div class="quick-link-info">
+                    <strong>Yangi ariza qo'shish</strong>
+                    <span>Yozma ariza ro'yxatdan o'tkazish</span>
+                </div>
+            </a>
+            @endif
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0">Profil ma'lumotlari</h6>
+    <div class="col-lg-6">
+        <div class="block h-100">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#aab0bb;margin-bottom:16px">Jarayon bosqichlari</div>
+            <div style="font-size:0.85rem;color:#5a6a8a;line-height:1.6;margin-bottom:14px">
+                <strong style="color:#15191e">Vazirlar Mahkamasi Qarori №478</strong> asosida
+                qo'shni hududga ariza berish va ko'rib chiqish jarayoni.
             </div>
-            <div class="card-body">
-                <table class="table table-sm">
-                    <tr>
-                        <td class="text-muted">F.I.O:</td>
-                        <td>{{ auth()->user()->name }}</td>
-                    </tr>
-                    <tr>
-                        <td class="text-muted">PINFL:</td>
-                        <td>{{ auth()->user()->pinfl }}</td>
-                    </tr>
-                    @if(auth()->user()->inn)
-                    <tr>
-                        <td class="text-muted">INN:</td>
-                        <td>{{ auth()->user()->inn }}</td>
-                    </tr>
+            <div>
+                @foreach(\App\Models\ApplicationApproval::ROLE_LABELS as $roleKey => $roleLabel)
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                    <div style="width:24px;height:24px;border-radius:50%;background:{{ $roleKey === $user->role ? '#018c87' : '#f0f2f5' }};color:{{ $roleKey === $user->role ? '#fff' : '#6e788b' }};font-size:0.7rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">{{ $loop->iteration }}</div>
+                    <span style="font-size:0.85rem;{{ $roleKey === $user->role ? 'color:#018c87;font-weight:700' : 'color:#27314b' }}">{{ $roleLabel }}</span>
+                    @if($roleKey === $user->role)
+                    <span class="sbadge sbadge-info" style="font-size:0.65rem;padding:2px 8px">Siz</span>
                     @endif
-                    @if(auth()->user()->organization && auth()->user()->position)
-                    <tr>
-                        <td class="text-muted">Tashkilot:</td>
-                        <td>{{ auth()->user()->organization }}</td>
-                    </tr>
-                    @endif
-                    @if(auth()->user()->position)
-                    <tr>
-                        <td class="text-muted">Lavozim:</td>
-                        <td>{{ auth()->user()->position }}</td>
-                    </tr>
-                    @endif
-                    @if(auth()->user()->certificate_valid_to)
-                    <tr>
-                        <td class="text-muted">Sertifikat amal qilish muddati:</td>
-                        <td>
-                            @if(auth()->user()->isCertificateValid())
-                                <span class="text-success">{{ auth()->user()->certificate_valid_to->format('d.m.Y') }}</span>
-                            @else
-                                <span class="text-danger">Muddati tugagan</span>
-                            @endif
-                        </td>
-                    </tr>
-                    @endif
-                </table>
+                </div>
+                @endforeach
             </div>
         </div>
     </div>
 </div>
+
 @endsection

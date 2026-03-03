@@ -11,6 +11,12 @@ var errorWrongPassword = 'Parol noto\'g\'ri.';
 // Global state
 var selectedKeyId = null;
 var selectedKeyVo = null;
+var selectedCardVo = null; // Used in card-based UI
+
+// Detect if page uses card-based key list (login page) vs select dropdown (show page)
+function isCardMode() {
+    return document.getElementById('eimzo-keys-list') !== null;
+}
 
 // Initialize E-IMZO on page load
 function AppLoad() {
@@ -110,28 +116,98 @@ function uiAppLoad() {
 }
 
 function uiClearCombo() {
-    var combo = document.getElementById('eimzo-keys');
-    if (combo) { combo.innerHTML = '<option value="">-- Kalitni tanlang --</option>'; }
+    if (isCardMode()) {
+        var list = document.getElementById('eimzo-keys-list');
+        if (list) {
+            list.innerHTML =
+                '<div class="keys-loader">' +
+                '<div class="keys-spinner"></div>' +
+                '<span>Kalitlar yuklanmoqda...</span>' +
+                '</div>';
+        }
+        selectedCardVo = null;
+    } else {
+        var combo = document.getElementById('eimzo-keys');
+        if (combo) { combo.innerHTML = '<option value="">-- Kalitni tanlang --</option>'; }
+    }
 }
 
 function uiFillCombo(items) {
-    var combo = document.getElementById('eimzo-keys');
-    if (combo) {
-        for (var i = 0; i < items.length; i++) {
-            combo.appendChild(items[i]);
+    if (isCardMode()) {
+        var list = document.getElementById('eimzo-keys-list');
+        if (list) {
+            list.innerHTML = '';
+            if (items.length === 0) {
+                list.innerHTML = '<div class="keys-empty">Kalitlar topilmadi</div>';
+            } else {
+                for (var i = 0; i < items.length; i++) {
+                    list.appendChild(items[i]);
+                }
+            }
+        }
+    } else {
+        var combo = document.getElementById('eimzo-keys');
+        if (combo) {
+            for (var i = 0; i < items.length; i++) {
+                combo.appendChild(items[i]);
+            }
         }
     }
 }
 
 function uiComboSelect(itmId) {
-    var el = document.getElementById(itmId);
-    if (el) { el.selected = true; }
+    if (isCardMode()) {
+        var card = document.getElementById(itmId);
+        if (card) { card.click(); }
+    } else {
+        var el = document.getElementById(itmId);
+        if (el) { el.selected = true; }
+    }
 }
 
 function uiCreateItem(itmkey, vo) {
     var now = new Date();
     vo.expired = dates.compare(now, vo.validTo) > 0;
-    var itm = document.createElement("option");
+
+    if (isCardMode()) {
+        var isYuridik = !!(vo.O || vo.T);
+        var typeLabel = isYuridik ? 'Yuridik shaxs' : 'Jismoniy shaxs';
+        var typeClass = isYuridik ? 'badge-yuridik' : 'badge-jismoniy';
+
+        var validFrom = vo.validFrom ? new Date(vo.validFrom).toLocaleDateString('ru-RU') : '';
+        var validTo   = vo.validTo   ? new Date(vo.validTo).toLocaleDateString('ru-RU')   : '';
+
+        var card = document.createElement('div');
+        card.className = 'key-card' + (vo.expired ? ' key-card-expired' : '');
+        card.id = itmkey;
+        card.setAttribute('data-vo', JSON.stringify(vo));
+
+        var stir = vo.TIN || vo.UID || '';
+        var stirRow = stir ? '<div class="key-card-stir">STIR: ' + stir + '</div>' : '';
+
+        card.innerHTML =
+            '<div class="key-card-name">' + (vo.CN || '') + '</div>' +
+            '<span class="key-card-badge ' + typeClass + '">' + typeLabel + '</span>' +
+            stirRow +
+            '<div class="key-card-meta">' +
+            '<div class="key-card-row"><span>Sertifikat raqami:</span><strong>' + (vo.serialNumber || 'N/A') + '</strong></div>' +
+            '<div class="key-card-row"><span>Sertifikatning amal qilish muddati:</span><strong>' + validFrom + ' - ' + validTo + '</strong></div>' +
+            '</div>' +
+            (vo.expired ? '<div class="key-expired-warn">&#9888; Muddati tugagan</div>' : '');
+
+        card.onclick = function () {
+            document.querySelectorAll('.key-card').forEach(function (c) { c.classList.remove('key-card-selected'); });
+            card.classList.add('key-card-selected');
+            selectedCardVo = vo;
+            var btn = document.getElementById('login-btn');
+            if (btn) btn.disabled = false;
+        };
+
+        return card;
+    }
+
+    // Fallback: option element for <select>
+    var itm = document.createElement('option');
     itm.value = itmkey;
     itm.text = vo.CN;
     if (vo.O) { itm.text += ' (' + vo.O + ')'; }
@@ -179,6 +255,13 @@ function wsError(e) {
 
 // Get selected key
 function getSelectedKey() {
+    if (isCardMode()) {
+        if (!selectedCardVo) {
+            uiShowMessage('Iltimos, kalitni tanlang');
+            return null;
+        }
+        return selectedCardVo;
+    }
     var combo = document.getElementById('eimzo-keys');
     if (!combo || !combo.value) {
         uiShowMessage('Iltimos, kalitni tanlang');
@@ -191,54 +274,28 @@ function getSelectedKey() {
 // Authentication - Client-side only
 function eimzoLogin() {
     uiClearMessage();
-    var combo = document.getElementById('eimzo-keys');
-    if (!combo || !combo.value) {
-        uiShowMessage('Iltimos, kalitni tanlang');
-        return;
-    }
-
-    var option = combo.options[combo.selectedIndex];
-    var vo = JSON.parse(option.getAttribute('data-vo'));
-
-    if (!vo) {
-        uiShowMessage('Iltimos, kalitni tanlang');
-        return;
-    }
+    var vo = getSelectedKey();
+    if (!vo) return;
 
     if (vo.expired) {
         uiShowMessage('Bu kalitning muddati tugagan');
         return;
     }
 
-    // Log selected key info
     console.log('Selected key for login:', {
-        name: vo.CN,
-        pinfl: vo.PINFL,
+        name: vo.CN, pinfl: vo.PINFL,
         inn: vo.TIN || vo.UID,
         organization: vo.O,
-        serialNumber: vo.serialNumber,
-        type: vo.type
+        serialNumber: vo.serialNumber, type: vo.type
     });
 
     uiShowProgress('Kalit yuklanmoqda...');
-
-    // Generate a random challenge client-side
     var challenge = generateChallenge();
 
-    // Load the SPECIFIC key selected by user
     EIMZOClient.loadKey(vo, function(keyId) {
-        console.log('Key loaded with ID:', keyId, 'for serial:', vo.serialNumber);
         uiShowProgress('Imzolanmoqda...');
-
         EIMZOClient.createPkcs7(keyId, challenge, null, function(pkcs7) {
-            console.log('PKCS7 signature created with keyId:', keyId);
-            console.log('Expected certificate info:', {
-                name: vo.CN,
-                pinfl: vo.PINFL
-            });
             uiShowProgress('Autentifikatsiya...');
-
-            // Send to server for authentication
             fetch('/eimzo/authenticate', {
                 method: 'POST',
                 headers: {
@@ -246,27 +303,20 @@ function eimzoLogin() {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
                 body: JSON.stringify({
-                    pkcs7: pkcs7,
-                    challenge: challenge,
-                    expected_pinfl: vo.PINFL,
-                    expected_name: vo.CN
+                    pkcs7: pkcs7, challenge: challenge,
+                    expected_pinfl: vo.PINFL, expected_name: vo.CN
                 })
             })
             .then(response => response.json())
             .then(result => {
                 uiHideProgress();
-                console.log('Server response:', result);
                 if (result.success || result.status === 1) {
                     window.location.href = result.redirect || '/dashboard';
                 } else {
                     uiShowMessage(result.message || 'Autentifikatsiya xatosi');
                 }
             })
-            .catch(err => {
-                uiHideProgress();
-                console.error('Authentication error:', err);
-                uiShowMessage('Server xatosi: ' + err.message);
-            });
+            .catch(err => { uiHideProgress(); uiShowMessage('Server xatosi: ' + err.message); });
         }, uiHandleError, false);
     }, uiHandleError, true);
 }
@@ -346,7 +396,8 @@ function signDocument(documentId) {
 
 // Initialize on DOM ready - runs on any page with the E-IMZO key dropdown
 document.addEventListener('DOMContentLoaded', function() {
-    if (typeof CAPIWS !== 'undefined' && document.getElementById('eimzo-keys')) {
+    if (typeof CAPIWS !== 'undefined' &&
+        (document.getElementById('eimzo-keys') || document.getElementById('eimzo-keys-list'))) {
         AppLoad();
     }
 });

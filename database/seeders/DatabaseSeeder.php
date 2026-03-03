@@ -2,46 +2,34 @@
 
 namespace Database\Seeders;
 
-use App\Models\Document;
-use App\Models\User;
+use App\Models\District;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create demo user (will be matched by PINFL from E-IMZO certificate)
-        $user = User::create([
-            'name' => 'Test Foydalanuvchi',
-            'pinfl' => '12345678901234',
-            'inn' => '123456789',
-            'organization' => 'Test Tashkilot',
-            'position' => 'Direktor',
-            'certificate_valid_from' => now(),
-            'certificate_valid_to' => now()->addYear(),
-        ]);
+        $districts = [
+            ['name' => 'Chilonzor',        'name_uz' => 'Chilonzor tumani',        'code' => 'CHI', 'is_active' => true],
+            ['name' => 'Olmazar',          'name_uz' => 'Olmazar tumani',          'code' => 'OLM', 'is_active' => true],
+            ['name' => 'Shayxontohur',     'name_uz' => 'Shayxontohur tumani',     'code' => 'SHY', 'is_active' => true],
+            ['name' => 'Yunusobod',        'name_uz' => 'Yunusobod tumani',        'code' => 'YUN', 'is_active' => true],
+            ['name' => "Mirzo Ulug'bek",   'name_uz' => "Mirzo Ulug'bek tumani",   'code' => 'MIR', 'is_active' => true],
+            ['name' => 'Mirobod',          'name_uz' => 'Mirobod tumani',          'code' => 'MIB', 'is_active' => true],
+            ['name' => 'Yakkasaroy',       'name_uz' => 'Yakkasaroy tumani',       'code' => 'YAK', 'is_active' => true],
+            ['name' => 'Uchtepa',          'name_uz' => 'Uchtepa tumani',          'code' => 'UCH', 'is_active' => true],
+            ['name' => 'Yashnobod',        'name_uz' => 'Yashnobod tumani',        'code' => 'YSH', 'is_active' => true],
+            ['name' => 'Sergeli',          'name_uz' => 'Sergeli tumani',          'code' => 'SER', 'is_active' => true],
+            ['name' => 'Bektemir',         'name_uz' => 'Bektemir tumani',         'code' => 'BEK', 'is_active' => true],
+            ['name' => 'Yangihayot',       'name_uz' => 'Yangihayot tumani',       'code' => 'YNG', 'is_active' => true],
+        ];
 
-        // Create sample documents
-        Document::create([
-            'title' => 'Shartnoma №1',
-            'content' => "SHARTNOMA №1\n\nToshkent shahri\n" . now()->format('d.m.Y') . "\n\nUshbu shartnoma quyidagi tomonlar o'rtasida tuzildi:\n\n1. \"Test Tashkilot\" MChJ (keyingi o'rinlarda \"Buyurtmachi\" deb yuritiladi)\n\n2. Ijrochi tomon\n\nShartnoma predmeti:\nBuyurtmachi Ijrochiga dasturiy ta'minot ishlab chiqish bo'yicha xizmatlar ko'rsatishni topshiradi.\n\nShartnoma shartlari:\n- Ish muddati: 30 kun\n- To'lov summasi: 10,000,000 so'm\n\nTomonlar rekvizitlari:\n...",
-            'user_id' => $user->id,
-        ]);
+        foreach ($districts as $d) {
+            District::firstOrCreate(['code' => $d['code']], $d);
+        }
 
-        Document::create([
-            'title' => 'Buyruq №15',
-            'content' => "BUYRUQ №15\n\n" . now()->format('d.m.Y') . "\n\nTest Tashkilot MChJ direktori\n\nBUYURDIM:\n\n1. 2024-yil 1-mart kunidan boshlab yangi loyihani boshlash.\n\n2. Loyiha rahbari etib Abdullayev A.A.ni tayinlansin.\n\n3. Loyiha uchun 50,000,000 so'm mablag' ajratilsin.\n\nAsos: Direktorlar kengashi qarori.\n\nDirektor: _______________",
-            'user_id' => $user->id,
-        ]);
+        $this->command->info('12 Toshkent tumanlari yaratildi.');
 
-        Document::create([
-            'title' => 'Hisobot - 2024 yil 1-chorak',
-            'content' => "MOLIYAVIY HISOBOT\n2024-yil 1-chorak\n\nTest Tashkilot MChJ\n\n1. DAROMADLAR\n- Asosiy faoliyatdan: 150,000,000 so'm\n- Boshqa daromadlar: 5,000,000 so'm\nJAMI DAROMAD: 155,000,000 so'm\n\n2. XARAJATLAR\n- Ish haqi: 50,000,000 so'm\n- Ijara: 10,000,000 so'm\n- Kommunal xizmatlar: 5,000,000 so'm\n- Boshqa xarajatlar: 15,000,000 so'm\nJAMI XARAJAT: 80,000,000 so'm\n\n3. SOF FOYDA: 75,000,000 so'm\n\nHisobotni tayyorladi: Bosh hisobchi",
-            'user_id' => $user->id,
-        ]);
-
-        $this->command->info('Seeding completed!');
-        $this->command->info('Demo user PINFL: 12345678901234');
-        $this->command->info('Note: Real authentication requires E-IMZO certificate with matching PINFL');
+        $this->call(CommissionMembersSeeder::class);
     }
 }

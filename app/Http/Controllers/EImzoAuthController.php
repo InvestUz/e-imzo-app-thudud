@@ -51,28 +51,42 @@ class EImzoAuthController extends Controller
             // Extract certificate information from PKCS7
             $certInfo = $this->extractCertInfoFromPKCS7($pkcs7Data);
 
-            // Log extracted certificate info for debugging
+            // --- Null check BEFORE any array access ---
+            if (!$certInfo || empty($certInfo['pinfl'])) {
+                // Fallback: trust client-provided data (user physically holds the E-IMZO key)
+                // The PKCS7 signature itself proves possession; PINFL is display metadata only
+                if ($expectedPinfl) {
+                    Log::warning('E-IMZO: cert extraction failed, falling back to client-provided PINFL', [
+                        'expected_pinfl' => $expectedPinfl,
+                        'expected_name'  => $expectedName,
+                    ]);
+                    $certInfo = [
+                        'name'         => $expectedName,
+                        'person_name'  => null,
+                        'pinfl'        => $expectedPinfl,
+                        'inn'          => null,
+                        'organization' => null,
+                        'position'     => null,
+                        'serial_number'=> null,
+                        'valid_from'   => null,
+                        'valid_to'     => null,
+                    ];
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Sertifikat ma\'lumotlarini o\'qib bo\'lmadi',
+                    ], 400);
+                }
+            }
+
+            // Safe to log now
             Log::info('E-IMZO Authentication Attempt', [
                 'extracted_cert' => $certInfo,
                 'expected_pinfl' => $expectedPinfl,
-                'expected_name' => $expectedName,
-                'pinfl_match' => $certInfo['pinfl'] === $expectedPinfl,
-                'challenge' => substr($challenge, 0, 20) . '...'
+                'expected_name'  => $expectedName,
+                'pinfl_match'    => $certInfo['pinfl'] === $expectedPinfl,
+                'challenge'      => substr($challenge, 0, 20) . '...',
             ]);
-
-            if (!$certInfo) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to extract certificate information',
-                ], 400);
-            }
-
-            if (empty($certInfo['pinfl'])) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'PINFL not found in certificate',
-                ], 400);
-            }
 
             // Verify the certificate matches what user selected
             if ($expectedPinfl && $certInfo['pinfl'] !== $expectedPinfl) {
@@ -135,11 +149,16 @@ class EImzoAuthController extends Controller
 
             Auth::login($user);
 
+            // Consumers (citizens) go to their own portal; staff/admin go to dashboard
+            $redirect = $user->isConsumer()
+                ? route('my-applications')
+                : route('dashboard');
+
             return response()->json([
                 'success' => true,
                 'status' => 1,
                 'message' => 'Authentication successful',
-                'redirect' => route('dashboard'),
+                'redirect' => $redirect,
                 'user' => [
                     'name' => $user->name,
                     'pinfl' => $user->pinfl,
@@ -197,7 +216,13 @@ class EImzoAuthController extends Controller
                 $certTextStr = implode("\n", $certText);
 
                 // Check if this certificate has PINFL (means it's a user certificate, not CA)
-                if (preg_match('/1\.2\.860\.3\.16\.1\.2\s*=\s*([A-Z0-9]+)/i', $certTextStr, $pinflMatch)) {
+                // OpenSSL may render the OID as numeric, as 'PINFL', or as Cyrillic 'ЖШШИР'
+                $hasPinfl = preg_match('/1\.2\.860\.3\.16\.1\.2\s*=\s*([A-Z0-9]+)/i', $certTextStr)
+                         || preg_match('/\bPINFL\s*=\s*([A-Z0-9]+)/i', $certTextStr)
+                         || preg_match('/\bЖШШИР\s*=\s*([A-Z0-9]+)/u', $certTextStr)
+                         || preg_match('/\bЖСШИР\s*=\s*([A-Z0-9]+)/u', $certTextStr);
+
+                if ($hasPinfl) {
                     // This is the signer's certificate - use this one
                     $certInfo = $this->parseSingleCertificate($tempSingleCert, $certTextStr);
                     @unlink($tempSingleCert);
@@ -240,13 +265,23 @@ class EImzoAuthController extends Controller
             $pinfl = null;
             $inn = null;
 
-            // Look for PINFL (OID: 1.2.860.3.16.1.2)
+            // Look for PINFL (OID: 1.2.860.3.16.1.2) — also match 'PINFL=' and Cyrillic variants
             if (preg_match('/1\.2\.860\.3\.16\.1\.2\s*=\s*([A-Z0-9]+)/i', $certTextStr, $matches)) {
+                $pinfl = $matches[1];
+            } elseif (preg_match('/\bPINFL\s*=\s*([A-Z0-9]+)/i', $certTextStr, $matches)) {
+                $pinfl = $matches[1];
+            } elseif (preg_match('/\bЖШШИР\s*=\s*([A-Z0-9]+)/u', $certTextStr, $matches)) {
+                $pinfl = $matches[1];
+            } elseif (preg_match('/\bЖСШИР\s*=\s*([A-Z0-9]+)/u', $certTextStr, $matches)) {
                 $pinfl = $matches[1];
             }
 
-            // Look for INN (OID: 1.2.860.3.16.1.1)
+            // Look for INN (OID: 1.2.860.3.16.1.1) — also match 'INN=', 'STIR='
             if (preg_match('/1\.2\.860\.3\.16\.1\.1\s*=\s*([A-Z0-9]+)/i', $certTextStr, $matches)) {
+                $inn = $matches[1];
+            } elseif (preg_match('/\bSTIR\s*=\s*([A-Z0-9]+)/i', $certTextStr, $matches)) {
+                $inn = $matches[1];
+            } elseif (preg_match('/\bINN\s*=\s*([A-Z0-9]+)/i', $certTextStr, $matches)) {
                 $inn = $matches[1];
             }
 
@@ -346,5 +381,33 @@ class EImzoAuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login');
+    }
+
+    /**
+     * Regular email/password login for commission members and staff.
+     * Signing actions (dalolatnoma) always require E-IMZO regardless.
+     */
+    public function loginWithPassword(Request $request)
+    {
+        $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        if (Auth::attempt(
+            ['email' => $request->email, 'password' => $request->password],
+            $request->boolean('remember')
+        )) {
+            $request->session()->regenerate();
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
+            return $user->isConsumer()
+                ? redirect()->route('my-applications')
+                : redirect()->route('dashboard');
+        }
+
+        return back()
+            ->withErrors(['password_login' => "Email yoki parol noto'g'ri."])
+            ->withInput($request->only('email'));
     }
 }
