@@ -60,43 +60,15 @@ class CommissionMembersSeeder extends Seeder
             ]
         );
 
-        // ─── Workflow approval staff (regional backup — see all districts) ─
+        // ─── Workflow approval staff (Shartnoma — 7 bosqich) ─────────────────────
+        // NOTE: 'director' handles both step 3 (topshiriq) and step 7 (yakuniy tasdiq)
         $staff = [
-            [
-                'name'  => 'Demo Moderator',
-                'email' => 'moderator@tutash.uz',
-                'role'  => 'moderator',
-                'pinfl' => '10000000000098',
-                'pass'  => 'moderator123',
-            ],
-            [
-                'name'  => 'Shikoyat Mutaxassisi',
-                'email' => 'shikoyat@tutash.uz',
-                'role'  => 'complaint_officer',
-                'pinfl' => '10000000000097',
-                'pass'  => 'staff123',
-            ],
-            [
-                'name'  => 'Demo Yurist',
-                'email' => 'yurist@tutash.uz',
-                'role'  => 'lawyer',
-                'pinfl' => '10000000000096',
-                'pass'  => 'staff123',
-            ],
-            [
-                'name'  => 'Demo Ijrochi',
-                'email' => 'ijrochi@tutash.uz',
-                'role'  => 'executor',
-                'pinfl' => '10000000000095',
-                'pass'  => 'staff123',
-            ],
-            [
-                'name'  => 'Tuman Boshlig\'i',
-                'email' => 'boshlik@tutash.uz',
-                'role'  => 'district_head',
-                'pinfl' => '10000000000094',
-                'pass'  => 'staff123',
-            ],
+            ['name'=>'Devon Xodimi',      'email'=>'devon@tutash.uz',       'role'=>'devon',        'pinfl'=>'10000000000098', 'pass'=>'staff123'],
+            ['name'=>'Demo Ijrochi',      'email'=>'ijrochi@tutash.uz',     'role'=>'executor',     'pinfl'=>'10000000000095', 'pass'=>'staff123'],
+            ['name'=>'Rahbar (Direktor)', 'email'=>'direktor@tutash.uz',    'role'=>'director',     'pinfl'=>'10000000000097', 'pass'=>'staff123'],
+            ['name'=>'Tuman Vakili',      'email'=>'tuman.vakil@tutash.uz', 'role'=>'district_rep', 'pinfl'=>'10000000000092', 'pass'=>'staff123'],
+            ['name'=>'Demo Yurist',       'email'=>'yurist@tutash.uz',      'role'=>'lawyer',       'pinfl'=>'10000000000096', 'pass'=>'staff123'],
+            ['name'=>'Komplayans Xodimi', 'email'=>'komplayans@tutash.uz',  'role'=>'compliance',   'pinfl'=>'10000000000093', 'pass'=>'staff123'],
         ];
 
         foreach ($staff as $s) {
@@ -113,24 +85,25 @@ class CommissionMembersSeeder extends Seeder
             );
         }
 
-        $this->command->info('10 komissiya a\'zolari + admin + 5 workflow staff yaratildi.');
+        $this->command->info('10 komissiya a\'zolari + admin + 6 workflow staff yaratildi.');
         $this->command->info('');
         $this->command->info('Kirish ma\'lumotlari:');
-        $this->command->info('  admin@tutash.uz          / admin123       (IT Admin)');
-        $this->command->info('  moderator@tutash.uz      / moderator123   (Moderator — barcha tumanlar)');
-        $this->command->info('  shikoyat@tutash.uz       / staff123       (Shikoyat mutaxassisi)');
-        $this->command->info('  yurist@tutash.uz         / staff123       (Yurist)');
-        $this->command->info('  ijrochi@tutash.uz        / staff123       (Ijrochi)');
-        $this->command->info('  boshlik@tutash.uz        / staff123       (Tuman boshlig\'i)');
-        $this->command->info('  hokim.qurilish@tutash.uz / commission123  (Komissiya - Dalolatnoma)');
-        $this->command->info('  qurilish@tutash.uz       / commission123');
-        $this->command->info('  ekologiya@tutash.uz      / commission123');
+        $this->command->info('  admin@tutash.uz           / admin123       (IT Admin)');
+        $this->command->info('  devon@tutash.uz           / staff123       (Devon — 1-bosqich: Qabul)');
+        $this->command->info('  ijrochi@tutash.uz         / staff123       (Ijrochi — 2-bosqich: Ko\'rib chiqish)');
+        $this->command->info('  direktor@tutash.uz        / staff123       (Rahbar — 3-bosqich: Topshiriq + 7-bosqich: Yakuniy)');
+        $this->command->info('  tuman.vakil@tutash.uz     / staff123       (Tuman Vakili — 4-bosqich)');
+        $this->command->info('  yurist@tutash.uz          / staff123       (Yurist — 5-bosqich)');
+        $this->command->info('  komplayans@tutash.uz      / staff123       (Komplayans — 6-bosqich)');
+        $this->command->info('  hokim.qurilish@tutash.uz  / commission123  (Komissiya - Dalolatnoma)');
+        $this->command->info('  qurilish@tutash.uz        / commission123');
+        $this->command->info('  ekologiya@tutash.uz       / commission123');
         $this->command->info('  obodonlashtirish@tutash.uz / commission123');
-        $this->command->info('  kadastr@tutash.uz        / commission123');
-        $this->command->info('  fvv@tutash.uz            / commission123');
-        $this->command->info('  ses@tutash.uz            / commission123');
-        $this->command->info('  soliq@tutash.uz          / commission123');
-        $this->command->info('  iib@tutash.uz            / commission123');
-        $this->command->info('  yordamchi@tutash.uz      / commission123');
+        $this->command->info('  kadastr@tutash.uz         / commission123');
+        $this->command->info('  fvv@tutash.uz             / commission123');
+        $this->command->info('  ses@tutash.uz             / commission123');
+        $this->command->info('  soliq@tutash.uz           / commission123');
+        $this->command->info('  iib@tutash.uz             / commission123');
+        $this->command->info('  yordamchi@tutash.uz       / commission123');
     }
 }

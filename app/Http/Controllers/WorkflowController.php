@@ -190,12 +190,14 @@ class WorkflowController extends Controller
     private function statusForStep(string $role): string
     {
         return match ($role) {
-            'moderator'         => 'moderator_review',
-            'complaint_officer' => 'complaint_review',
-            'lawyer'            => 'legal_review',
-            'executor'          => 'executor_review',
-            'district_head'     => 'head_review',
-            default             => 'pending',
+            'devon'          => 'devon_review',
+            'executor'       => 'executor_review',
+            'director'       => 'director_review',
+            'district_rep'   => 'district_rep_review',
+            'lawyer'         => 'legal_review',
+            'compliance'     => 'compliance_review',
+            'director_final' => 'director_final_review',
+            default          => 'pending',
         };
     }
 }

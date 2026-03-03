@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers;
 
@@ -298,14 +298,15 @@ class AdminController extends Controller
     public static function roleOptions(): array
     {
         return [
-            'admin'            => 'Administrator (IT)',
-            'moderator'        => 'Moderator',
-            'complaint_officer'=> 'Shikoyat mutaxassisi',
-            'lawyer'           => 'Yurist',
-            'executor'         => 'Ijrochi',
-            'district_head'    => 'Tuman boshlig\'i',
-            'commission'       => 'Komissiya a\'zosi (Dalolatnoma)',
-            'consumer'         => 'Fuqaro (ariza beruvchi)',
+            'admin'          => 'Administrator (IT)',
+            'devon'          => 'Devon (Qabul xodimi)',
+            'executor'       => 'Ijrochi',
+            'director'       => 'Rahbar (Topshiriq + Yakuniy tasdiq)',
+            'district_rep'   => 'Tuman Vakili',
+            'lawyer'         => 'Yurist',
+            'compliance'     => 'Komplayans xodimi',
+            'commission'     => 'Komissiya a\'zosi (Dalolatnoma)',
+            'consumer'       => 'Fuqaro (ariza beruvchi)',
         ];
     }
 
@@ -327,56 +328,69 @@ class AdminController extends Controller
                 ],
                 'cannot' => ['Arizani tasdiqlash/rad etish (bu workflow rollar uchun)'],
             ],
-            'moderator' => [
-                'label'       => 'Moderator',
+            'devon' => [
+                'label'       => 'Devon (Qabul)',
                 'color'       => 'sbadge-info',
-                'description' => '1-bosqich: ariza to\'liqligini tekshirish va yo\'naltirish.',
+                'description' => '1-bosqich: Devon ariza qabul qiladi va ro\'yxatga kiritadi.',
                 'can' => [
-                    'Kiruvchi arizalarni ko\'rish (o\'z tuman yoki barcha tumanlar, agar zaxira bo\'lsa)',
-                    '1-bosqich: Tasdiqlash yoki Rad etish (E-IMZO imzosi bilan)',
-                    'Arizaga izoh qoldirish',
+                    '1-bosqich: Ariza qabul qilish',
+                    'Tasdiqlash yoki Rad etish (izoh bilan)',
+                    'Arizani navbatga qo\'yish',
                 ],
                 'cannot' => ['Boshqa bosqichlarni tasdiqlash', 'Admin panelga kirish'],
-            ],
-            'complaint_officer' => [
-                'label'       => 'Shikoyat mutaxassisi',
-                'color'       => 'sbadge-blue',
-                'description' => '2-bosqich: shikoyatlar va murojaatlar bo\'yicha tekshiruv.',
-                'can' => [
-                    '2-bosqich: Tasdiqlash yoki Rad etish',
-                    'Shikoyat-murojaat bo\'yicha qaror qabul qilish',
-                ],
-                'cannot' => ['1, 3-5-bosqichlarni tasdiqlash'],
-            ],
-            'lawyer' => [
-                'label'       => 'Yurist',
-                'color'       => 'sbadge-purple',
-                'description' => '3-bosqich: huquqiy ekspertiza va xulosa.',
-                'can' => [
-                    '3-bosqich: Tasdiqlash yoki Rad etish (E-IMZO imzosi bilan)',
-                    'Huquqiy xulosani qayd etish',
-                ],
-                'cannot' => ['1, 2, 4-5-bosqichlarni tasdiqlash'],
             ],
             'executor' => [
                 'label'       => 'Ijrochi',
                 'color'       => 'sbadge-warning',
-                'description' => '4-bosqich: hisob-kitob va to\'lov muddatini belgilash.',
+                'description' => '2-bosqich: Ijrochi arizani o\'rganadi va Rahbarga yo\'naltiradi (+/−).',
                 'can' => [
-                    '4-bosqich: Tasdiqlash (hisob-kitob bilan)',
-                    'Maydon, narx, jarima va to\'lov muddatini kiritish',
+                    '2-bosqich: Tasdiqlash (+) yoki Rad etish (−)',
+                    'Hisob-kitob ma\'lumotlarini kiritish',
+                    'Rad etilganda javob xatini izoh sifatida kiritish',
                 ],
-                'cannot' => ['Hisob-kitobsiz tasdiqlash'],
+                'cannot' => ['1, 3-7-bosqichlarni tasdiqlash'],
             ],
-            'district_head' => [
-                'label'       => 'Tuman boshlig\'i',
-                'color'       => 'sbadge-success',
-                'description' => '5-bosqich (yakuniy): tuman hokimiyati tomonidan tasdiqlash.',
+            'director' => [
+                'label'       => 'Rahbar (Topshiriq + Yakuniy)',
+                'color'       => 'sbadge-blue',
+                'description' => '3-bosqich: Topshiriq beradi. 7-bosqich (yakuniy): Shartnoma tuzilishiga ruxsat beradi.',
                 'can' => [
-                    '5-bosqich (yakuniy): Tasdiqlash yoki Rad etish (E-IMZO bilan)',
-                    'Arizani to\'liq tasdiqlash yoki qaytarish',
+                    '3-bosqich: Topshiriq berish (tasdiqlash yoki rad etish)',
+                    '7-bosqich (yakuniy): Barcha bosqichlardan o\'tgan arizani tasdiqlash',
+                    'Shartnoma tuzilishiga yakuniy ruxsat',
                 ],
-                'cannot' => ['1-4-bosqichlarni tasdiqlash'],
+                'cannot' => ['2, 4-6-bosqichlarni tasdiqlash'],
+            ],
+            'district_rep' => [
+                'label'       => 'Tuman Vakili',
+                'color'       => 'sbadge-success',
+                'description' => '4-bosqich: Tuman vakili arizani o\'rganadi va tutash hududga yo\'naltiradi (+/−).',
+                'can' => [
+                    '4-bosqich: Tasdiqlash yoki Rad etish',
+                    'Tutash hudud bo\'yicha xulosa bildirish',
+                    'Qayta yo\'naltirish uchun izoh qoldirish',
+                ],
+                'cannot' => ['1-3, 5-7-bosqichlarni tasdiqlash'],
+            ],
+            'lawyer' => [
+                'label'       => 'Yurist',
+                'color'       => 'sbadge-purple',
+                'description' => '5-bosqich: Yurist huquqiy ekspertiza o\'tkazadi va OK bosadi.',
+                'can' => [
+                    '5-bosqich: Tasdiqlash yoki Rad etish (E-IMZO bilan)',
+                    'Huquqiy xulosani qayd etish',
+                ],
+                'cannot' => ['1-4, 6-7-bosqichlarni tasdiqlash'],
+            ],
+            'compliance' => [
+                'label'       => 'Komplayans xodimi',
+                'color'       => 'sbadge-blue',
+                'description' => '6-bosqich: Komplayans muvofiqligini tekshiradi va OK bosadi.',
+                'can' => [
+                    '6-bosqich: Tasdiqlash yoki Rad etish (E-IMZO bilan)',
+                    'Muvofiqlik xulosasini qayd etish',
+                ],
+                'cannot' => ['1-5, 7-bosqichlarni tasdiqlash'],
             ],
             'commission' => [
                 'label'       => 'Komissiya a\'zosi',
@@ -384,16 +398,16 @@ class AdminController extends Controller
                 'description' => 'Dalolatnomani E-IMZO bilan imzolash (workflow bosqichlari bilan bog\'liq emas).',
                 'can' => [
                     'Dalolatnomani E-IMZO bilan imzolash',
-                    'O\'z lavozimi bo\'yicha imzo qo\'yish (masalan: kadastr, ekologiya, yurist)',
+                    'O\'z lavozimi bo\'yicha imzo qo\'yish',
                 ],
                 'cannot' => ['Workflow bosqichlarini tasdiqlash', 'Admin panelga kirish'],
             ],
             'consumer' => [
                 'label'       => 'Fuqaro',
                 'color'       => 'sbadge-gray',
-                'description' => 'Ariza berish va holatin kuzatish.',
+                'description' => 'Ariza berish va holatini kuzatish.',
                 'can' => [
-                    'E-IMZO orqali ariza yuborish',
+                    'E-IMZO orqali shartnoma arizasi yuborish',
                     'O\'z arizalarini kuzatish',
                     'Bildirishnomalar olish',
                 ],

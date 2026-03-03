@@ -40,9 +40,11 @@ class User extends Authenticatable
     public function hasRole(string $role): bool { return $this->role === $role; }
 
     // Can this user approve a specific step for a given district?
+    // Note: 'director_final' (step 7) is handled by users with role='director'
     public function canApproveStep(string $stepRole, int $districtId): bool
     {
-        if ($this->role !== $stepRole) return false;
+        $effectiveRole = ($stepRole === 'director_final') ? 'director' : $stepRole;
+        if ($this->role !== $effectiveRole) return false;
         // Regional backup can approve for any district
         if ($this->is_regional_backup) return true;
         // Otherwise must be same district

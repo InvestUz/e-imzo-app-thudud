@@ -15,32 +15,46 @@
 .status-badge { font-size:.78rem; padding:4px 12px; border-radius:20px; font-weight:600; border:1px solid transparent; }
 .status-pending          { background:#fff3cd; color:#856404; border-color:#fec524; }
 .status-moderator_review { background:rgba(20,113,240,.08); color:#1471f0; border-color:#1471f0; }
-.status-complaint_review { background:rgba(14,186,148,.08); color:#0eba94; border-color:#0eba94; }
-.status-legal_review     { background:rgba(103,60,200,.08); color:#673cc8; border-color:#673cc8; }
+.status-devon_review     { background:rgba(20,113,240,.08); color:#1471f0; border-color:#1471f0; }
 .status-executor_review  { background:rgba(213,141,61,.08); color:#a05a00; border-color:#d5893d; }
-.status-head_review      { background:rgba(1,140,135,.08);  color:#018c87; border-color:#018c87; }
+.status-director_review  { background:rgba(14,186,148,.08); color:#0eba94; border-color:#0eba94; }
+.status-district_rep_review { background:rgba(103,60,200,.08); color:#673cc8; border-color:#673cc8; }
+.status-legal_review     { background:rgba(103,60,200,.12); color:#5230a0; border-color:#673cc8; }
+.status-compliance_review{ background:rgba(1,140,135,.08);  color:#018c87; border-color:#018c87; }
+.status-director_final_review { background:rgba(14,186,148,.15); color:#0a7a63; border-color:#0eba94; }
 .status-approved         { background:rgba(6,184,56,.08);   color:#0bc33f; border-color:#0bc33f; }
 .status-rejected         { background:rgba(230,50,96,.08);  color:#e63260; border-color:#e63260; }
 
 /* ─── Workflow timeline ─── */
-.timeline { position:relative; padding-left:30px; }
-.timeline::before { content:''; position:absolute; left:14px; top:0; bottom:0; width:2px; background:#f0f2f5; }
-.tl-step { position:relative; margin-bottom:24px; }
+.timeline { position:relative; padding-left:32px; }
+.timeline::before { content:''; position:absolute; left:15px; top:0; bottom:0; width:2px; background:#f0f2f5; }
+.tl-step { position:relative; margin-bottom:20px; }
 .tl-dot {
-    position:absolute; left:-22px; top:4px;
-    width:18px; height:18px; border-radius:50%;
+    position:absolute; left:-23px; top:5px;
+    width:20px; height:20px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
-    font-size:10px; font-weight:700; border:2px solid #d7dde1; background:#fff;
+    font-size:11px; font-weight:700; border:2px solid #d7dde1; background:#fff;
 }
 .tl-dot.waiting  { background:#f4f6f8; border-color:#d7dde1; color:#aab0bb; }
 .tl-dot.pending  { background:#fff3cd; border-color:#fec524; color:#9a6800; }
 .tl-dot.approved { background:rgba(6,184,56,.1); border-color:#0bc33f; color:#0bc33f; }
 .tl-dot.rejected { background:rgba(230,50,96,.1); border-color:#e63260; color:#e63260; }
-.tl-body { background:#f9fafb; border-radius:10px; padding:14px 16px; border:1px solid #f0f2f5; }
+.tl-body { background:#f9fafb; border-radius:10px; padding:12px 14px; border:1px solid #f0f2f5; }
 .tl-body.tl-active { background:rgba(1,140,135,.05); border:1px solid #018c87; }
-.tl-role { font-weight:700; font-size:.9rem; margin-bottom:4px; color:#15191e; }
-.tl-meta { font-size:.8rem; color:#6e788b; }
-.tl-comment { font-size:.85rem; color:#27314b; margin-top:8px; padding:8px 12px; background:#fff; border-radius:6px; border-left:3px solid #018c87; }
+.tl-body.tl-rejected { background:rgba(230,50,96,.04); border:1px solid rgba(230,50,96,.25); }
+.tl-role { font-weight:700; font-size:.88rem; margin-bottom:6px; color:#15191e; }
+
+/* History detail rows */
+.tl-hist { display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:6px; font-size:.78rem; }
+.tl-hist-item { display:flex; align-items:center; gap:4px; color:#6e788b; }
+.tl-hist-item strong { color:#27314b; font-weight:600; }
+.tl-hist-item .tl-icon { font-size:.9rem; }
+.tl-comment { font-size:.84rem; color:#27314b; margin-top:8px; padding:8px 12px;
+    background:#fff; border-radius:6px; border-left:3px solid #e63260; }
+.tl-comment.tl-comment-ok { border-left-color:#018c87; }
+
+/* Assign badge */
+.tl-assign { font-size:.75rem; color:#6e788b; margin-top:4px; }
 
 /* ─── Approve form ─── */
 .approve-form { background:#fff; border:2px solid #018c87; border-radius:12px; padding:20px; margin-top:10px; }
@@ -136,59 +150,85 @@
 
         {{-- Workflow timeline --}}
         <div class="detail-card">
-            <h5>Jarayon holati</h5>
+            <h5>Ko'rib chiqish tarixi</h5>
             @php $canApproveStep = null; @endphp
             <div class="timeline">
                 @foreach($application->approvals as $approval)
                 @php
-                    $isActive = $approval->status === 'pending';
+                    $isActive   = $approval->status === 'pending';
+                    $isDone     = in_array($approval->status, ['approved','rejected']);
+                    $isRejected = $approval->status === 'rejected';
                     $userCanApprove = auth()->user()->canApproveStep($approval->step_role, $application->district_id)
                                    && $isActive;
+                    $dotClass = $isActive ? 'pending' : ($isDone ? $approval->status : 'waiting');
                 @endphp
                 <div class="tl-step">
-                    <div class="tl-dot {{ $approval->status }}">
+                    <div class="tl-dot {{ $dotClass }}">
                         @if($approval->status === 'approved') ✓
                         @elseif($approval->status === 'rejected') ✗
                         @elseif($approval->status === 'pending') ●
                         @else {{ $approval->step_order }}
                         @endif
                     </div>
-                    <div class="tl-body {{ $isActive ? 'tl-active' : '' }}">
-                        <div class="d-flex justify-content-between align-items-center">
+                    <div class="tl-body {{ $isActive ? 'tl-active' : ($isRejected ? 'tl-rejected' : '') }}">
+                        {{-- Step header --}}
+                        <div class="d-flex justify-content-between align-items-start">
                             <div class="tl-role">
-                                {{ $approval->step_order }}. {{ $approval->roleLabel() }}
+                                <span style="color:#94a3b8; font-weight:400; font-size:.76rem;">{{ $approval->step_order }}.</span>
+                                {{ $approval->roleLabel() }}
                                 @if($approval->is_backup_approval)
-                                <span class="badge bg-warning text-dark ms-1" style="font-size:.65rem">Zaxira</span>
+                                <span class="badge bg-warning text-dark ms-1" style="font-size:.62rem">Zaxira</span>
                                 @endif
                             </div>
                             <div>
                                 @if($approval->status === 'approved')
-                                    <span class="badge bg-success">Tasdiqlandi</span>
+                                    <span class="badge" style="background:rgba(6,184,56,.15);color:#0bc33f;font-size:.72rem">✓ Tasdiqlandi</span>
                                 @elseif($approval->status === 'rejected')
-                                    <span class="badge bg-danger">Rad etildi</span>
+                                    <span class="badge" style="background:rgba(230,50,96,.15);color:#e63260;font-size:.72rem">✗ Rad etildi</span>
                                 @elseif($approval->status === 'pending')
-                                    <span class="badge bg-warning text-dark">Kutilmoqda</span>
+                                    <span class="badge" style="background:#fff3cd;color:#9a6800;border:1px solid #fec524;font-size:.72rem">⏳ Kutilmoqda</span>
                                 @else
-                                    <span class="badge bg-secondary">Navbatda</span>
+                                    <span class="badge bg-secondary" style="font-size:.72rem">Navbatda</span>
                                 @endif
                             </div>
                         </div>
-                        <div class="tl-meta">
-                            @if($approval->assignee)
-                            Mas'ul: {{ $approval->assignee->name }}
-                            @if($approval->assignee->district)
-                            ({{ $approval->assignee->district->name }})
-                            @endif
+
+                        {{-- History detail: who, when, why --}}
+                        @if($isDone)
+                        <div class="tl-hist">
+                            @if($approval->approver)
+                            <div class="tl-hist-item">
+                                <span class="tl-icon">👤</span>
+                                <span>Kim: <strong>{{ $approval->approver->name }}</strong></span>
+                            </div>
                             @endif
                             @if($approval->approved_at)
-                            &bull; {{ $approval->approved_at->setTimezone(config('app.timezone'))->format('d.m.Y H:i') }}
+                            <div class="tl-hist-item">
+                                <span class="tl-icon">🕒</span>
+                                <span>Qachon: <strong>{{ $approval->approved_at->setTimezone(config('app.timezone'))->format('d.m.Y H:i') }}</strong></span>
+                            </div>
                             @endif
-                            @if($approval->approver && $approval->approver->id !== $approval->assigned_to)
-                            &bull; {{ $approval->approver->name }} tomonidan
+                            @if($approval->is_backup_approval)
+                            <div class="tl-hist-item">
+                                <span class="tl-icon">🔄</span>
+                                <span><strong>Zaxira hodim</strong> tomonidan bajarildi</span>
+                            </div>
                             @endif
                         </div>
                         @if($approval->comments)
-                        <div class="tl-comment">{{ $approval->comments }}</div>
+                        <div class="tl-comment {{ $isRejected ? '' : 'tl-comment-ok' }}">
+                            <span style="font-weight:600; font-size:.75rem; color:#94a3b8;">{{ $isRejected ? '❌ Sabab / Javob xat' : '📋 Izoh' }}:</span><br>
+                            {{ $approval->comments }}
+                        </div>
+                        @endif
+                        @elseif($isActive)
+                        {{-- Active step: show assignee --}}
+                        @if($approval->assignee)
+                        <div class="tl-assign">
+                            👤 Mas'ul: <strong>{{ $approval->assignee->name }}</strong>
+                            @if($approval->assignee->district) ({{ $approval->assignee->district->name }}) @endif
+                        </div>
+                        @endif
                         @endif
 
                         {{-- Approve/reject form for current user --}}
@@ -254,9 +294,12 @@
                                 @endif
 
                                 <div class="mb-3">
-                                    <label class="form-label small fw-semibold">Izoh (ixtiyoriy)</label>
-                                    <textarea name="comments" class="form-control form-control-sm" rows="2"
-                                        placeholder="Qaror asosini yozing..."></textarea>
+                                    <label class="form-label small fw-semibold">
+                                        Izoh / Sabab
+                                        <span class="text-danger" style="font-size:.7rem">* rad etishda majburiy</span>
+                                    </label>
+                                    <textarea name="comments" class="form-control form-control-sm" rows="3"
+                                        placeholder="Qaror asosini yozing (masalan: hujjatlar to'liq emas, kadastr mos emas...)" id="comments-{{ $approval->id }}"></textarea>
                                 </div>
 
                                 {{-- E-IMZO signing --}}
@@ -412,88 +455,31 @@
     </div>
 </div>
 
-{{-- ═══ Dalolatnoma imzolari ═══ --}}
-@if(!auth()->user()->isConsumer())
-@php
-    $dalSigs = $application->dalolatnomaSignatures->keyBy('commission_position');
-    /** @var \App\Models\User $authUser */
-    $authUser = auth()->user();
-    $isCommissionUser = $authUser->isCommission() && $authUser->commission_position;
-@endphp
-<div class="detail-card mt-2">
-    <h5>Dalolatnoma imzolari — Komissiya a'zolari</h5>
-
-    @if(session('dalo_success'))
-    <div class="alert alert-success alert-dismissible fade show py-2">
-        {{ session('dalo_success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    @endif
-
-    <div class="row g-3">
-    @foreach(\App\Models\DalolatnomaSignature::POSITIONS as $posKey => $posLabel)
-    @php
-        $sig = $dalSigs->get($posKey);
-        $isMine = $isCommissionUser && $authUser->commission_position === $posKey;
-    @endphp
-    <div class="col-md-6">
-        <div class="dalo-slot {{ $sig ? 'dalo-signed' : ($isMine ? 'dalo-mine' : 'dalo-waiting') }}">
-            <div class="dalo-pos">{{ $posLabel }}</div>
-
-            @if($sig)
-                {{-- ✓ Signed --}}
-                <div class="dalo-signed-body">
-                    <span class="dalo-check">✓</span>
-                    <div class="dalo-signer-info">
-                        <div class="dalo-name">{{ $sig->signer->name ?? '—' }}</div>
-                        <span class="dalo-date">{{ $sig->signed_at->setTimezone(config('app.timezone', 'Asia/Tashkent'))->format('d.m.Y H:i') }}</span>
-                    </div>
-                    <a href="{{ $sig->getVerifyUrl() }}" target="_blank" class="dalo-qr-link" title="Tasdiqlash">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?data={{ urlencode($sig->getVerifyUrl()) }}&size=80x80&margin=4"
-                             width="80" height="80" alt="QR" class="dalo-qr-img">
-                    </a>
-                </div>
-
-            @elseif($isMine)
-                {{-- 🔑 Current commission user – unsigned slot --}}
-                <div id="eimzo-status" class="mb-1 small"></div>
-                <div id="eimzo-message" class="mb-1 small"></div>
-                <div id="eimzo-progress" class="mb-1 small"></div>
-                <form method="POST" action="{{ route('dalolatnoma.sign', $application) }}" id="dalo-form">
-                    @csrf
-                    <input type="hidden" name="pkcs7" id="dalo-pkcs7">
-                    <div class="mb-2">
-                        <select id="eimzo-keys" class="form-select form-select-sm">
-                            <option value="">— Kalitni tanlang —</option>
-                        </select>
-                    </div>
-                    <div id="dalo-sign-state" class="mb-2">
-                        <span class="sign-status sign-none" style="font-size:.75rem">&#9888; Imzosiz</span>
-                    </div>
-                    <div id="dalo-signed-state" style="display:none" class="mb-2">
-                        <span class="sign-status sign-ok" style="font-size:.75rem">&#10003; Imzolandi</span>
-                        <div class="text-muted small mt-1" id="dalo-signed-info"></div>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="signDalolatnoma()">
-                            E-IMZO bilan imzolash
-                        </button>
-                        <button type="submit" class="btn btn-sm btn-success" id="dalo-submit-btn" disabled>
-                            Saqlash
-                        </button>
-                    </div>
-                </form>
-
-            @else
-                {{-- ⏳ Other's slot, waiting --}}
-                <div class="dalo-waiting-label">&#8987; Imzo kutilmoqda</div>
-            @endif
-        </div>
-    </div>
-    @endforeach
+{{-- ═══ Shartnoma ready banner (replaces dalolatnoma) ═══ --}}
+@if($application->status === 'approved')
+<div class="detail-card mt-2" style="border-left:4px solid #0bc33f; background:rgba(6,184,56,.04);">
+    <h5 style="color:#0bc33f">&#10003; Ijara shartnomasi tuzilishi uchun ariza tasdiqlandi</h5>
+    <p class="mb-2" style="font-size:.9rem; color:#374151;">
+        Ariza <strong>{{ $application->number }}</strong> barcha {{ count($application->approvals) }}
+        bosqichdan muvaffaqiyatli o'tdi.
+        Endi soliq organi tomonidan <strong>ijara shartnomasi</strong> tuziladi.
+    </p>
+    <div class="row g-2" style="font-size:.82rem; color:#6e788b;">
+        @if($application->address)
+        <div class="col-12"><strong>Manzil:</strong> {{ $application->address }}</div>
+        @endif
+        @if($application->cadastral_number)
+        <div class="col-md-6"><strong>Kadastr raqami:</strong> {{ $application->cadastral_number }}</div>
+        @endif
+        @if($application->area_sqm)
+        <div class="col-md-6"><strong>Maydon:</strong> {{ number_format($application->area_sqm, 2) }} kv.m</div>
+        @endif
     </div>
 </div>
 @endif
+
+{{-- Dalolatnoma signing section hidden (workflow updated to Shartnoma) --}}
+{{-- @if(!auth()->user()->isConsumer()) ... @endif --}}
 
 @endsection
 
@@ -541,33 +527,4 @@ function submitApproval(approvalId, action) {
 }
 </script>
 
-<script>
-function signDalolatnoma() {
-    var keyEl = document.getElementById('eimzo-keys');
-    if (!keyEl || !keyEl.value) {
-        alert('Iltimos, avval E-IMZO kalitini tanlang');
-        return;
-    }
-    var itmKey = keyEl.value;
-    var dataToSign = 'DALOLATNOMA|{{ $application->number }}|{{ $application->id }}|' + new Date().toISOString();
-
-    EIMZOClient.createPkcs7(itmKey, dataToSign, null, function(pkcs7) {
-        document.getElementById('dalo-pkcs7').value = pkcs7;
-        document.getElementById('dalo-sign-state').style.display = 'none';
-        document.getElementById('dalo-signed-state').style.display = 'block';
-
-        var opt = keyEl.options[keyEl.selectedIndex];
-        if (opt && opt.getAttribute('data-vo')) {
-            try {
-                var vo = JSON.parse(opt.getAttribute('data-vo'));
-                var el = document.getElementById('dalo-signed-info');
-                if (el) el.textContent = (vo.CN || '') + (vo.serialNumber ? ' · ' + vo.serialNumber : '');
-            } catch(e) {}
-        }
-        document.getElementById('dalo-submit-btn').disabled = false;
-    }, function(err) {
-        alert('Imzolashda xatolik: ' + (err || 'nomalum'));
-    });
-}
-</script>
 @endpush

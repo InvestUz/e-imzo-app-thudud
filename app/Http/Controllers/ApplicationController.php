@@ -99,22 +99,28 @@ class ApplicationController extends Controller
 
         $app = DB::transaction(function () use ($request, $citizen) {
             $formData = array_filter([
+                'mahalla'               => $request->input('mahalla'),
                 'street_name'           => $request->input('street_name'),
-                'intersecting_streets'  => $request->input('intersecting_streets'),
-                'road_distance'         => $request->input('road_distance'),
-                'pedestrian_distance'   => $request->input('pedestrian_distance'),
+                'house_number'          => $request->input('house_number'),
                 'business_name'         => $request->input('business_name'),
                 'activity_type'         => $request->input('activity_type'),
                 'purpose'               => $request->input('purpose'),
                 'existing_structures'   => $request->input('existing_structures'),
             ]);
 
+            // Compose address from MFY + ko'cha + uy
+            $address = trim(
+                ($request->input('mahalla')      ? $request->input('mahalla')      . ' MFY, ' : '') .
+                ($request->input('street_name')  ? $request->input('street_name')  . ' ko\'cha, ' : '') .
+                ($request->input('house_number') ? $request->input('house_number') . '-uy' : '')
+            ) ?: $request->input('address');
+
             $app = Application::create([
                 'number'           => Application::generateNumber(),
                 'applicant_id'     => $citizen->id,
                 'district_id'      => $request->input('district_id'),
                 'cadastral_number' => $request->input('cadastral_number'),
-                'address'          => $request->input('address'),
+                'address'          => $address,
                 'area_sqm'         => $request->input('area_sqm'),
                 'source'           => 'online',
                 'description'      => $request->input('description'),
@@ -124,7 +130,7 @@ class ApplicationController extends Controller
                 'submitted_at'     => now(),
             ]);
 
-            // Create 5 sequential approval rows
+            // Create 6 sequential approval rows (Shartnoma workflow)
             $district = $app->district;
             foreach (Application::STEPS as $order => $role) {
                 $assignee = $district->employeesByRole($role)->first();
@@ -137,7 +143,7 @@ class ApplicationController extends Controller
                 ]);
             }
 
-            $app->update(['status' => 'moderator_review', 'current_step' => 'moderator']);
+            $app->update(['status' => 'devon_review', 'current_step' => 'devon']);
 
             // Handle uploaded docs
             if ($request->hasFile('documents')) {
@@ -394,22 +400,28 @@ class ApplicationController extends Controller
 
         $app = DB::transaction(function () use ($data, $request) {
             $formData = array_filter([
+                'mahalla'               => $request->input('mahalla'),
                 'street_name'           => $request->input('street_name'),
-                'intersecting_streets'  => $request->input('intersecting_streets'),
-                'road_distance'         => $request->input('road_distance'),
-                'pedestrian_distance'   => $request->input('pedestrian_distance'),
+                'house_number'          => $request->input('house_number'),
                 'business_name'         => $request->input('business_name'),
                 'activity_type'         => $request->input('activity_type'),
                 'purpose'               => $request->input('purpose'),
                 'existing_structures'   => $request->input('existing_structures'),
             ]);
 
+            // Compose address from MFY + ko'cha + uy
+            $address = trim(
+                ($request->input('mahalla')      ? $request->input('mahalla')      . ' MFY, ' : '') .
+                ($request->input('street_name')  ? $request->input('street_name')  . ' ko\'cha, ' : '') .
+                ($request->input('house_number') ? $request->input('house_number') . '-uy' : '')
+            ) ?: ($data['address'] ?? null);
+
             $app = Application::create([
                 'number'           => Application::generateNumber(),
                 'applicant_id'     => Auth::id(),
                 'district_id'      => $data['district_id'],
                 'cadastral_number' => $data['cadastral_number'],
-                'address'          => $data['address'] ?? null,
+                'address'          => $address,
                 'area_sqm'         => $data['area_sqm'] ?? null,
                 'source'           => $data['source'] ?? 'online',
                 'description'      => $data['description'] ?? null,
@@ -419,7 +431,7 @@ class ApplicationController extends Controller
                 'submitted_at'     => now(),
             ]);
 
-            // Create all 5 workflow approval rows
+            // Create all 6 workflow approval rows
             $district = $app->district;
             foreach (Application::STEPS as $order => $role) {
                 $assignee = $district->employeesByRole($role)->first();
@@ -434,8 +446,8 @@ class ApplicationController extends Controller
 
             // Move to first step
             $app->update([
-                'status'       => 'moderator_review',
-                'current_step' => 'moderator',
+                'status'       => 'devon_review',
+                'current_step' => 'devon',
             ]);
 
             // Handle uploaded documents

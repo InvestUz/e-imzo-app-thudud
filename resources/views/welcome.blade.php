@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Tutash Hudud — Dalolatnoma</title>
+    <title>Tutash Hudud — Ijara Shartnomasi Arizasi</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -284,29 +284,39 @@
     </div>
     @endif
 
-    {{-- ═══ Official Dalolatnoma Document ═══ --}}
+    {{-- ═══ Official Shartnoma Application Document (VM 478) ═══ --}}
     <div class="dalo-doc">
 
         {{-- Document header --}}
         <div class="dalo-doc-head">
             <img src="https://upload.wikimedia.org/wikipedia/commons/7/77/Emblem_of_Uzbekistan.svg" alt="Gerb" class="dalo-emblem">
-            <h1 class="dalo-title">Dalolatnoma</h1>
-            <p class="dalo-subtitle">Tadbirkorlik subyektlariga tutash hududlarni xatlovdan o'tkazish to'g'risida</p>
+            <p style="font-size:.76rem; color:#64748b; text-align:center; margin-bottom:6px; line-height:1.5;">
+                Toshkent shahar hokimligi huzuridagi<br>
+                <strong style="color:#374151;">&laquo;MIRZO ULUG&lsquo;BEK BUSINESS CITY&raquo;
+                tadbirkorlik markazini qurish va ekspluatatsiya qilish Direksiyasi&raquo; DUK</strong>ga
+            </p>
+            <h1 class="dalo-title">ARIZA</h1>
+            <p class="dalo-subtitle">Ijara shartnomasi rasmiylashtirilishi uchun &mdash; VM &numero;478</p>
             <div class="dalo-meta">
                 <span>Toshkent shahri</span>
-                <span>{{ date('Y') }}-yil «___» ____________</span>
+                <span>{{ date('Y') }}-yil &laquo;___&raquo; ____________</span>
             </div>
         </div>
 
-        {{-- Intro paragraph --}}
-        <p class="dalo-intro">
-            Tuzildi mazkur dalolatnoma Toshkent shahri,
-            <strong id="intro-district">__________________</strong> tumani,
-            <strong id="intro-street">__________________</strong> ko'chasida joylashgan umumiy ovqatlanish, savdo va xizmat ko'rsatish
-            sohasidagi tadbirkorlik subyektlari uchun o'ziga tegishli bino va inshootlarga hamda yer uchastkalariga
-            tutash bo'lgan, davlat organlari va tashkilotlariga doimiy foydalanishga berilgan aholi punktlarining
-            umumiy foydalanishdagi yer uchastkalarini aniqlash bo'yicha.
-        </p>
+        {{-- Applicant info strip --}}
+        <div style="border:1px solid #e2e8f0; border-radius:6px; padding:10px 14px; background:#f8fafc; margin-bottom:16px;">
+            <div style="font-size:.76rem; color:#94a3b8; margin-bottom:3px;">Ariza beruvchi (E-IMZO imzosidan aniqlanadi):</div>
+            <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
+                <div>
+                    <span style="font-size:.78rem; color:#64748b;">FISh / Korxona nomi:</span>&nbsp;
+                    <strong id="intro-name" style="font-size:.88rem; color:#1e3a8a;">______________________________</strong>
+                </div>
+                <div>
+                    <span style="font-size:.78rem; color:#64748b;">STIR / PINFL:</span>&nbsp;
+                    <strong id="intro-pinfl" style="font-size:.88rem; color:#1e3a8a;">___________________</strong>
+                </div>
+            </div>
+        </div>
 
         <form method="POST" action="{{ route('apply') }}" enctype="multipart/form-data" id="apply-form">
             @csrf
@@ -316,161 +326,155 @@
 
             <div class="dalo-body">
 
-                {{-- ──────────── LEFT column ──────────── --}}
+                {{-- LEFT column --}}
                 <div>
 
-                    {{-- Section I --}}
+                    {{-- Request body with inline fields --}}
                     <div class="dalo-section">
-                        <div class="dalo-sec-title">I. Xatlov o'tkazilgan ko'chaning tasnifi</div>
+                        <div class="dalo-sec-title">Murojaat matni</div>
+                        <p style="font-size:.82rem; color:#374151; line-height:2.2; margin:0;">
+                            Vazirlar Mahkamasining &laquo;Tadbirkorlik subyektlari uchun tutash hududlardan
+                            mavsumiy foydalanishni tashkil etishni yanada soddalashtirish
+                            choratadbirlari to&lsquo;g&lsquo;risida&raquo;gi
+                            <strong>2025 yil 31 iyuldagi 478-son</strong> qaroriga asosan
 
-                        <div class="dalo-field-row">
-                            <span class="dalo-lbl">1. Tuman:</span>
                             <select name="district_id" id="district_id"
                                 class="dalo-select @error('district_id') is-invalid @enderror" required>
-                                <option value="">— tanlang —</option>
+                                <option value="">&mdash; tuman &mdash;</option>
                                 @foreach($districts as $d)
                                 <option value="{{ $d->id }}" {{ old('district_id') == $d->id ? 'selected' : '' }}>
                                     {{ $d->name_uz }}
                                 </option>
                                 @endforeach
                             </select>
-                        </div>
-                        <div class="dalo-field-row">
-                            <span class="dalo-lbl">Ko'cha nomi:</span>
-                            <input type="text" name="street_name" class="dalo-input"
-                                placeholder="__________________" value="{{ old('street_name') }}">
-                        </div>
-                        <div class="dalo-field-row" style="align-items:flex-start">
-                            <span class="dalo-lbl" style="padding-top:2px">Kesishgan ko'chalar:</span>
-                            <input type="text" name="intersecting_streets" class="dalo-input"
-                                placeholder="__________________ va __________________" value="{{ old('intersecting_streets') }}">
-                        </div>
-                        <div class="dalo-field-row" style="margin-top:4px">
-                            <span class="dalo-lbl">2. Avtomobil yo'ligacha masofa (m):</span>
-                            <input type="number" name="road_distance" class="dalo-input dalo-input-xs"
-                                placeholder="____" step="0.1" min="0" value="{{ old('road_distance') }}">
-                        </div>
-                        <div class="dalo-field-row">
-                            <span class="dalo-lbl">3. Piyodalar yo'lagigacha masofa (m):</span>
-                            <input type="number" name="pedestrian_distance" class="dalo-input dalo-input-xs"
-                                placeholder="____" step="0.1" min="0" value="{{ old('pedestrian_distance') }}">
-                        </div>
+                            tumani,
+                            <input type="text" name="mahalla" id="mahalla_inp" class="dalo-input"
+                                style="max-width:130px" placeholder="MFY nomi"
+                                value="{{ old('mahalla') }}">
+                            MFY,
+                            <input type="text" name="street_name" id="street_inp" class="dalo-input"
+                                style="max-width:120px" placeholder="ko&rsquo;cha"
+                                value="{{ old('street_name') }}">
+                            ko&lsquo;chasi,
+                            <input type="text" name="house_number" id="house_inp" class="dalo-input"
+                                style="max-width:50px" placeholder="__"
+                                value="{{ old('house_number') }}">
+                            -uy manzilidagi o&lsquo;zimga tegishli (kadastr raqami
+                            <input type="text" name="cadastral_number" id="cadastral_number"
+                                class="dalo-input @error('cadastral_number') is-invalid @enderror"
+                                style="max-width:155px" placeholder="10:01:00:00:0001"
+                                value="{{ old('cadastral_number') }}" required>
+                            ) bino&#8209;inshoot (yer uchastkasi)ga tutash
+                            <input type="number" name="area_sqm" class="dalo-input dalo-input-xs"
+                                placeholder="___" step="0.01" min="0"
+                                value="{{ old('area_sqm') }}">
+                            kv.&thinsp;m yer uchastkasi hududi bo&lsquo;yicha
+                            <strong>ijara shartnomasi rasmiylashtirilishida amaliy yordam
+                            berishingizni so&lsquo;raymiz.</strong>
+                        </p>
+                        @error('district_id')
+                            <div class="text-danger" style="font-size:.72rem;margin-top:4px;">{{ $message }}</div>
+                        @enderror
+                        @error('cadastral_number')
+                            <div class="text-danger" style="font-size:.72rem;margin-top:2px;">{{ $message }}</div>
+                        @enderror
                     </div>
 
-                    {{-- Section II --}}
+                    {{-- Izoh --}}
                     <div class="dalo-section">
-                        <div class="dalo-sec-title">II. Obyekt va tutash hudud tasnifi</div>
-
-                        <div class="dalo-fblock">
-                            <label>1. Tadbirkorlik subyekti nomi:</label>
-                            <input type="text" name="business_name" class="dalo-full-inp"
-                                placeholder='"__________________________________" MChJ'
-                                value="{{ old('business_name') }}">
-                        </div>
-
-                        <div class="dalo-fblock">
-                            <label>2. Yuridik manzil:</label>
-                            <input type="text" name="address" class="dalo-full-inp"
-                                placeholder="____________ t., MFY, ko'cha, uy raqami"
-                                value="{{ old('address') }}">
-                        </div>
-
-                        <div class="dalo-2col">
-                            <div class="dalo-fblock">
-                                <label>3. Faoliyat turi</label>
-                                <input type="text" name="activity_type" class="dalo-full-inp"
-                                    placeholder="__________________" value="{{ old('activity_type') }}">
-                            </div>
-                            <div class="dalo-fblock">
-                                <label>4. Tutash hudud (kv.m)</label>
-                                <input type="number" name="area_sqm" class="dalo-full-inp"
-                                    placeholder="________ kv.m" step="0.01" min="0" value="{{ old('area_sqm') }}">
-                            </div>
-                        </div>
-
-                        <div class="dalo-2col">
-                            <div class="dalo-fblock">
-                                <label>5. Kadastr raqami <span style="color:#e53e3e">*</span></label>
-                                <input type="text" name="cadastral_number" id="cadastral_number"
-                                    class="dalo-full-inp @error('cadastral_number') is-invalid @enderror"
-                                    placeholder="10:01:00:00:0001"
-                                    value="{{ old('cadastral_number') }}" required>
-                                @error('cadastral_number')
-                                    <div class="invalid-feedback" style="font-size:.72rem">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="dalo-fblock">
-                                <label>Foydalanish maqsadi</label>
-                                <input type="text" name="purpose" class="dalo-full-inp"
-                                    placeholder="________________________________________" value="{{ old('purpose') }}">
-                            </div>
-                        </div>
-
-                        <div class="dalo-fblock">
-                            <label>6. Mavjud bino/inshootlar:</label>
-                            <input type="text" name="existing_structures" class="dalo-full-inp"
-                                placeholder="________________________________________" value="{{ old('existing_structures') }}">
-                        </div>
-
-                        <div class="dalo-fblock">
-                            <label>7. Izoh:</label>
-                            <textarea name="description" class="dalo-textarea"
-                                placeholder="________________________________________">{{ old('description') }}</textarea>
-                        </div>
+                        <div class="dalo-sec-title">Izoh (ixtiyoriy)</div>
+                        <textarea name="description" class="dalo-textarea" rows="2"
+                            placeholder="Qo'shimcha ma'lumot...">{{ old('description') }}</textarea>
                     </div>
 
                     {{-- File upload --}}
                     <div class="dalo-section" style="background:#fff">
-                        <div class="dalo-sec-title">Hujjat yuklash (ixtiyoriy)</div>
+                        <div class="dalo-sec-title">Hujjat biriktirish (ixtiyoriy)</div>
                         <p style="font-size:.74rem;color:#94a3b8;margin-bottom:8px">
-                            Ariza xati yoki tegishli hujjatlarni biriktiring. (PDF, DOC, maks. 10 MB)
+                            Mulk hujjati, kadastr ko'chirma yoki boshqa hujjatlar (PDF, DOC, maks. 10 MB)
                         </p>
                         <input type="file" name="documents[]" class="form-control form-control-sm"
                             multiple accept=".pdf,.doc,.docx">
                     </div>
 
-                    {{-- Section III – Applicant E-IMZO signature --}}
+                    {{-- Signature --}}
                     <div class="dalo-sec-iii">
-                        <div class="dalo-sec-iii-title">III. Dalolatnoma bilan tanishganlik</div>
+                        <div class="dalo-sec-iii-title">Ariza beruvchi imzosi</div>
                         <div class="dalo-sig-row">
                             <div class="dalo-sig-blk">
-                                <span class="dalo-sig-hint">Subyekt rahbari (vakili):</span>
+                                <span class="dalo-sig-hint">(imzo)</span>
                                 <span class="dalo-sig-val">______________________</span>
                             </div>
                             <div class="dalo-sig-blk" style="text-align:right">
-                                <span class="dalo-sig-hint">Imzo / Muhr</span>
-                                <span class="dalo-sig-val">______________________</span>
+                                <span class="dalo-sig-hint">__ _____ 20__ yil</span>
+                                <span class="dalo-sig-val" id="signer-name-val">______________________</span>
                             </div>
                         </div>
                         <button type="button" class="btn-dalo" onclick="openSignModal()">
-                         Ariza yuborish
+                            &#128273; Ariza yuborish (E-IMZO bilan imzolash)
                         </button>
                         <div class="dalo-submit-hint">Ariza yuborishdan oldin elektron imzo bilan tasdiqlanadi</div>
                     </div>
 
                 </div>{{-- /left --}}
 
-                {{-- ──────────── RIGHT column — Commission signatures ──────────── --}}
+                {{-- RIGHT column — workflow steps --}}
                 <div class="dalo-right-col">
-                    <div class="dalo-comm-title">Komissiya a'zolari</div>
-                    @foreach(\App\Models\DalolatnomaSignature::POSITIONS as $posLabel)
+                    <div class="dalo-comm-title">Ko&rsquo;rib chiqish tartibi</div>
+
+                    @php
+                    $wfSteps = [
+                        ['num'=>1, 'role'=>'Devon',           'desc'=>'Ariza qabul qilinadi'],
+                        ['num'=>2, 'role'=>'Ijrochi',         'desc'=>"Rahbarga yo'naltiradi (+/&minus;)"],
+                        ['num'=>3, 'role'=>'Rahbar',          'desc'=>'Topshiriq beradi'],
+                        ['num'=>4, 'role'=>'Tuman Vakili',    'desc'=>"Tutash hududga yo'naltiradi (+/&minus;)"],
+                        ['num'=>5, 'role'=>'Yurist',          'desc'=>'Huquqiy ekspertiza'],
+                        ['num'=>6, 'role'=>'Komplayans',      'desc'=>'Muvofiqlik tekshiruvi'],
+                        ['num'=>7, 'role'=>'Rahbar',          'desc'=>'Yakuniy tasdiq ✓'],
+                    ];
+                    @endphp
+
+                    @foreach($wfSteps as $step)
                     <div class="dalo-comm-slot">
-                        <p class="dalo-comm-name">{{ $posLabel }}:</p>
-                        <div class="dalo-comm-line">
-                            <span class="dalo-imzo-ghost">Imzo</span>
-                            <span style="width:56px"></span>
+                        <div style="display:flex; align-items:flex-start; gap:8px;">
+                            <span style="background:#018c87; color:#fff; border-radius:50%;
+                                min-width:20px; height:20px; display:inline-flex;
+                                align-items:center; justify-content:center;
+                                font-size:.68rem; font-weight:700; flex-shrink:0; margin-top:1px;">
+                                {{ $step['num'] }}
+                            </span>
+                            <div>
+                                <div style="font-weight:700; font-size:.78rem; color:#1e293b;">{{ $step['role'] }}</div>
+                                <div style="font-size:.72rem; color:#64748b;">{!! $step['desc'] !!}</div>
+                            </div>
                         </div>
                     </div>
                     @endforeach
+
+                    <div style="margin-top:14px; padding-top:12px; border-top:2px solid #e2e8f0;
+                        text-align:center; font-size:.78rem; font-weight:700; color:#018c87;">
+                        &#8595;&nbsp; Ijara shartnomasi tuziladi
+                    </div>
+
+                    <div style="margin-top:14px; padding:10px 12px; background:#f0faf9;
+                        border-radius:8px; border:1px solid #b2dfdb; font-size:.72rem; color:#374151;">
+                        <strong>Eslatma:</strong> 3-bosqichda ijrochi arizani
+                        rad etsa, <em>javob xat</em> yuboriladi.
+                        Barcha bosqichlardan o&lsquo;tgach
+                        <strong>ijara shartnomasi</strong> tuziladi.
+                    </div>
                 </div>
 
             </div>{{-- /dalo-body --}}
         </form>
 
         <div class="dalo-doc-foot">
-            Elektron tizim orqali shakllantirildi — Tutash Hudud &nbsp;·&nbsp; VM №478
+            Elektron tizim orqali shakllantirildi &mdash; Tutash Hudud &nbsp;&middot;&nbsp; VM &numero;478
         </div>
     </div>
+
+
+
 
 </div>
 </main>

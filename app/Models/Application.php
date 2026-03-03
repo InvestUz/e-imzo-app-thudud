@@ -21,24 +21,29 @@ class Application extends Model
         'form_data'    => 'array',
     ];
 
-    // Workflow step order
+    // Workflow step order (Shartnoma — VM 478)
+    // 1.Devon → 2.Ijrochi → 3.Rahbar → 4.Tuman Vakili → 5.Yurist → 6.Komplayans → 7.Rahbar (Yakuniy)
     public const STEPS = [
-        1 => 'moderator',
-        2 => 'complaint_officer',
-        3 => 'lawyer',
-        4 => 'executor',
-        5 => 'district_head',
+        1 => 'devon',
+        2 => 'executor',
+        3 => 'director',
+        4 => 'district_rep',
+        5 => 'lawyer',
+        6 => 'compliance',
+        7 => 'director_final',
     ];
 
     public const STATUS_LABELS = [
-        'pending'          => 'Kutilmoqda',
-        'moderator_review' => 'Moderator ko\'rib chiqmoqda',
-        'complaint_review' => 'Shikoyat bo\'limi ko\'rib chiqmoqda',
-        'legal_review'     => 'Yurist ko\'rib chiqmoqda',
-        'executor_review'  => 'Ijrochi ko\'rib chiqmoqda',
-        'head_review'      => 'Rahbar ko\'rib chiqmoqda',
-        'approved'         => 'Tasdiqlandi',
-        'rejected'         => 'Rad etildi',
+        'pending'               => 'Kutilmoqda',
+        'devon_review'          => 'Devon qabul qilmoqda',
+        'executor_review'       => 'Ijrochi ko\'rib chiqmoqda',
+        'director_review'       => 'Rahbar topshiriq bermoqda',
+        'district_rep_review'   => 'Tuman vakili ko\'rib chiqmoqda',
+        'legal_review'          => 'Yurist ko\'rib chiqmoqda',
+        'compliance_review'     => 'Komplayans ko\'rib chiqmoqda',
+        'director_final_review' => 'Rahbar yakuniy tasdiqlash',
+        'approved'              => 'Tasdiqlandi — Shartnoma tuziladi',
+        'rejected'              => 'Rad etildi',
     ];
 
     public function applicant(): BelongsTo

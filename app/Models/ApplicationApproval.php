@@ -19,11 +19,13 @@ class ApplicationApproval extends Model
     ];
 
     public const ROLE_LABELS = [
-        'moderator'        => 'Moderator',
-        'complaint_officer'=> 'Shikoyat mutaxassisi',
-        'lawyer'           => 'Yurist',
-        'executor'         => 'Ijrochi',
-        'district_head'    => 'Tuman boshlig\'i',
+        'devon'          => 'Devon (Qabul)',
+        'executor'       => 'Ijrochi',
+        'director'       => 'Rahbar (Topshiriq)',
+        'district_rep'   => 'Tuman Vakili',
+        'lawyer'         => 'Yurist',
+        'compliance'     => 'Komplayans',
+        'director_final' => 'Rahbar (Yakuniy tasdiq)',
     ];
 
     public function application(): BelongsTo
