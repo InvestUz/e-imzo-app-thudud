@@ -43,8 +43,10 @@ class User extends Authenticatable
     public function canApproveStep(string $stepRole, int $districtId): bool
     {
         if ($this->role !== $stepRole) return false;
-        // Own district or is regional backup
-        return $this->district_id === $districtId || $this->is_regional_backup;
+        // Regional backup can approve for any district
+        if ($this->is_regional_backup) return true;
+        // Otherwise must be same district
+        return (int) $this->district_id === $districtId;
     }
 
     // --- Relationships ---

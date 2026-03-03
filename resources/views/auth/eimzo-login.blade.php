@@ -343,9 +343,7 @@
                 {{-- Method tabs --}}
                 <div class="auth-tabs">
                     <button class="auth-tab {{ $errors->has('password_login') ? 'active' : '' }}" id="tab-btn-login" onclick="switchTab('login', this)">Parol</button>
-                    <button class="auth-tab" onclick="switchTab('mobile', this)">Mobile-ID</button>
                     <button class="auth-tab {{ !$errors->has('password_login') ? 'active' : '' }}" id="tab-btn-eri" onclick="switchTab('eri', this)">ERI</button>
-                    <button class="auth-tab" onclick="switchTab('qr', this)">QR-kod</button>
                 </div>
 
                 {{-- Status messages --}}
@@ -413,19 +411,6 @@
                     </div>
                 </div>
 
-                {{-- Mobile tab (placeholder) --}}
-                <div id="tab-mobile" class="auth-tab-content">
-                    <div style="text-align:center;padding:32px;color:#aab0bb;font-size:0.875rem">
-                        Mobile-ID hozircha mavjud emas.
-                    </div>
-                </div>
-
-                {{-- QR tab (placeholder) --}}
-                <div id="tab-qr" class="auth-tab-content">
-                    <div style="text-align:center;padding:32px;color:#aab0bb;font-size:0.875rem">
-                        QR-kod orqali kirish hozircha mavjud emas.
-                    </div>
-                </div>
 
             </div>
 

@@ -474,7 +474,46 @@
         .table { font-size: 0.875rem; }
         .table-hover tbody tr:hover td { background: #f7f9fa; }
 
-        /* ── Responsive ── */
+        /* ── Notification bell badge ── */
+        .bell-badge {
+            position: absolute;
+            top: 4px; right: 4px;
+            background: #e63260;
+            color: #fff;
+            font-size: 0.6rem;
+            font-weight: 800;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 0 4px;
+            pointer-events: none;
+            border: 2px solid #fff;
+        }
+
+        /* ── Notification item ── */
+        .notif-item {
+            padding: 10px 16px;
+            border-bottom: 1px solid #f4f6f8;
+            cursor: pointer;
+            transition: background 0.1s;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            text-decoration: none;
+            color: inherit;
+        }
+        .notif-item:hover { background: #f7f9fa; }
+        .notif-item.unread { background: rgba(1,140,135,0.04); }
+        .notif-item.unread .notif-title { font-weight: 700; }
+        .notif-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+        .notif-title { font-size: 0.85rem; color: #15191e; line-height: 1.3; }
+        .notif-body { font-size: 0.78rem; color: #6e788b; margin-top: 2px; }
+        .notif-meta { font-size: 0.72rem; color: #aab0bb; margin-top: 3px; }
+
+        /* ── Admin nav items ── */
+        .admin-nav-section { background: rgba(1,140,135,0.06); border-radius: 8px; margin: 4px 0; }
+
         @media (max-width: 960px) {
             .platon-aside { display: none; }
             .platon-content { padding: 16px; }
@@ -548,6 +587,37 @@
                         Yangi ariza qo'shish
                     </a>
                 </li>
+                <div class="platon-nav-label" style="margin-top:8px">IT Boshqaruv</div>
+                <li>
+                    <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1" stroke-linecap="round" stroke-linejoin="round"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-linecap="round" stroke-linejoin="round"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Admin panel
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.applications') }}" class="{{ request()->routeIs('admin.applications') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8 13h8M8 17h8"/><path clip-rule="evenodd" stroke-linecap="round" stroke-linejoin="round" d="M6 3h9.172a2 2 0 011.414.586l2.828 2.828A2 2 0 0120 7.828V19a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2z"/></svg>
+                        Barcha arizalar
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.users') }}" class="{{ request()->routeIs('admin.users') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4" stroke-linecap="round" stroke-linejoin="round"/><path stroke-linecap="round" stroke-linejoin="round" d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                        Foydalanuvchilar
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.sessions') }}" class="{{ request()->routeIs('admin.sessions') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2"/></svg>
+                        Sessiyalar
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.roles') }}" class="{{ request()->routeIs('admin.roles') ? 'active' : '' }}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        Rollar & Huquqlar
+                    </a>
+                </li>
                 @endif
                 @endauth
             </ul>
@@ -574,7 +644,30 @@
                 </a>
 
                 @auth
-                {{-- Inbox bell --}}
+                {{-- Notification bell --}}
+                <div class="platon-user-wrap" style="position:relative">
+                    <button class="platon-icon-btn" id="bell-btn" onclick="toggleBell()" title="Bildirishnomalar" style="position:relative">
+                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" d="M10 2a6 6 0 00-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 00-6-6zM8 16a2 2 0 004 0"/>
+                        </svg>
+                        <span id="bell-badge" class="bell-badge" style="display:none"></span>
+                    </button>
+                    {{-- Notification dropdown --}}
+                    <div class="platon-dropdown" id="bell-dropdown" style="min-width:340px;right:0;left:auto">
+                        <div style="padding:12px 16px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0f2f5">
+                            <strong style="font-size:0.9rem">Bildirishnomalar</strong>
+                            <button onclick="markAllRead()" class="platon-btn platon-btn-outline platon-btn-sm" style="font-size:0.75rem;padding:4px 10px">Barchasini o'qildi</button>
+                        </div>
+                        <div id="bell-list" style="max-height:380px;overflow-y:auto">
+                            <div style="padding:24px;text-align:center;color:#aab0bb;font-size:0.85rem" id="bell-empty">Bildirishnoma yo'q</div>
+                        </div>
+                        <div style="border-top:1px solid #f0f2f5;padding:8px 16px">
+                            <a href="{{ route('notifications.page') }}" style="font-size:0.82rem;color:#018c87">Barcha bildirishnomalar →</a>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Inbox bell (staff) --}}
                 @if(!auth()->user()->isConsumer())
                 <a href="{{ route('applications.inbox') }}" class="platon-icon-btn" title="Kiruvchi">
                     <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -600,6 +693,10 @@
                             <br><span style="font-size:0.72rem">PINFL: {{ auth()->user()->pinfl }}</span>
                             @endif
                         </div>
+                        <a href="{{ route('profile') }}" class="platon-dropdown-item">Mening profilim</a>
+                        @if(auth()->user()->isAdmin())
+                        <a href="{{ route('admin.dashboard') }}" class="platon-dropdown-item">IT Boshqaruv paneli</a>
+                        @endif
                         <form action="{{ route('logout') }}" method="POST" style="margin:0">
                             @csrf
                             <button type="submit" class="platon-dropdown-item text-danger">
@@ -627,14 +724,115 @@
 <script>
     function togglePlatonDropdown() {
         document.getElementById('user-dropdown').classList.toggle('show');
+        document.getElementById('bell-dropdown')?.classList.remove('show');
+    }
+    function toggleBell() {
+        var dd = document.getElementById('bell-dropdown');
+        var isOpen = dd.classList.toggle('show');
+        document.getElementById('user-dropdown').classList.remove('show');
+        if (isOpen) loadNotifications();
     }
     document.addEventListener('click', function(e) {
-        var btn = document.getElementById('avatar-btn');
-        var dd  = document.getElementById('user-dropdown');
-        if (btn && dd && !btn.contains(e.target) && !dd.contains(e.target)) {
-            dd.classList.remove('show');
+        var avatarBtn = document.getElementById('avatar-btn');
+        var userDd    = document.getElementById('user-dropdown');
+        var bellBtn   = document.getElementById('bell-btn');
+        var bellDd    = document.getElementById('bell-dropdown');
+        if (avatarBtn && userDd && !avatarBtn.contains(e.target) && !userDd.contains(e.target)) {
+            userDd.classList.remove('show');
+        }
+        if (bellBtn && bellDd && !bellBtn.contains(e.target) && !bellDd.contains(e.target)) {
+            bellDd.classList.remove('show');
         }
     });
+
+    @auth
+    var _notifLoaded = false;
+    var _csrfToken = '{{ csrf_token() }}';
+    var _notifUrl  = '{{ route("notifications.json") }}';
+    var _markAllUrl = '{{ route("notifications.read-all") }}';
+
+    function loadNotifications() {
+        fetch(_notifUrl, {headers: {'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json'}})
+            .then(r => {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            })
+            .then(data => {
+                updateBellBadge(data.unread);
+                renderNotifications(data.notifications);
+            })
+            .catch(function(err) {
+                // Silently ignore - may be unauthenticated or network issue
+                console.debug('Bell fetch:', err.message);
+            });
+    }
+
+    function updateBellBadge(count) {
+        var badge = document.getElementById('bell-badge');
+        if (!badge) return;
+        if (count > 0) {
+            badge.style.display = 'flex';
+            badge.textContent = count > 99 ? '99+' : count;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    function renderNotifications(items) {
+        var list = document.getElementById('bell-list');
+        var empty = document.getElementById('bell-empty');
+        if (!items || items.length === 0) {
+            list.innerHTML = '<div style="padding:24px;text-align:center;color:#aab0bb;font-size:0.85rem">Bildirishnoma yo\'q</div>';
+            return;
+        }
+        empty && (empty.style.display = 'none');
+        list.innerHTML = items.map(n => {
+            var href = n.url ? n.url : '#';
+            return `<a class="notif-item ${n.read ? '' : 'unread'}" href="${href}"
+                       onclick="markRead(event, ${n.id}, this)">
+                <span class="notif-icon">${n.icon}</span>
+                <div style="flex:1;min-width:0">
+                    <div class="notif-title">${escHtml(n.title)}</div>
+                    ${n.body ? '<div class="notif-body">' + escHtml(n.body) + '</div>' : ''}
+                    <div class="notif-meta">
+                        ${n.created_at}
+                        ${n.creator ? ' · ' + escHtml(n.creator) : ''}
+                        ${n.read && n.read_at ? ' · o\'qildi: ' + n.read_at : ''}
+                    </div>
+                </div>
+                ${!n.read ? '<span style="width:8px;height:8px;border-radius:50%;background:#018c87;flex-shrink:0;margin-top:5px"></span>' : ''}
+            </a>`;
+        }).join('');
+    }
+
+    function markRead(e, id, el) {
+        if (!el.classList.contains('unread')) return;
+        fetch('/notifications/' + id + '/read', {
+            method: 'POST',
+            headers: {'X-CSRF-TOKEN': _csrfToken, 'X-Requested-With': 'XMLHttpRequest'},
+        }).then(() => {
+            el.classList.remove('unread');
+            el.querySelector('span[style*="border-radius:50%"]')?.remove();
+            loadNotifications();
+        });
+    }
+
+    function markAllRead() {
+        fetch(_markAllUrl, {
+            method: 'POST',
+            headers: {'X-CSRF-TOKEN': _csrfToken, 'X-Requested-With': 'XMLHttpRequest'},
+        }).then(() => loadNotifications());
+    }
+
+    function escHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // Poll unread count every 30 seconds
+    loadNotifications();
+    setInterval(loadNotifications, 30000);
+    @endauth
 </script>
 @stack('scripts')
 </body>

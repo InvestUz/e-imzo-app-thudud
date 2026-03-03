@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\UserSession;
 use App\Services\EImzoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -148,6 +149,19 @@ class EImzoAuthController extends Controller
             }
 
             Auth::login($user);
+
+            // Track session
+            UserSession::where('user_id', $user->id)->where('is_active', true)->get()->each(fn($s) => $s->terminate());
+            UserSession::create([
+                'user_id'       => $user->id,
+                'session_token' => $request->session()->getId(),
+                'ip_address'    => $request->ip(),
+                'user_agent'    => $request->userAgent(),
+                'logged_in_at'  => now(),
+                'last_active_at'=> now(),
+                'is_active'     => true,
+                'auth_method'   => 'eimzo',
+            ]);
 
             // Consumers (citizens) go to their own portal; staff/admin go to dashboard
             $redirect = $user->isConsumer()
@@ -376,6 +390,14 @@ class EImzoAuthController extends Controller
 
     public function logout(Request $request)
     {
+        if (Auth::check()) {
+            $sessionId = $request->session()->getId();
+            UserSession::where('user_id', Auth::id())
+                ->where('session_token', $sessionId)
+                ->where('is_active', true)
+                ->get()
+                ->each(fn($s) => $s->terminate());
+        }
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -401,6 +423,20 @@ class EImzoAuthController extends Controller
             $request->session()->regenerate();
             /** @var \App\Models\User $user */
             $user = Auth::user();
+
+            // Track session
+            UserSession::where('user_id', $user->id)->where('is_active', true)->get()->each(fn($s) => $s->terminate());
+            UserSession::create([
+                'user_id'       => $user->id,
+                'session_token' => $request->session()->getId(),
+                'ip_address'    => $request->ip(),
+                'user_agent'    => $request->userAgent(),
+                'logged_in_at'  => now(),
+                'last_active_at'=> now(),
+                'is_active'     => true,
+                'auth_method'   => 'password',
+            ]);
+
             return $user->isConsumer()
                 ? redirect()->route('my-applications')
                 : redirect()->route('dashboard');

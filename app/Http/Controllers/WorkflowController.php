@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Application;
 use App\Models\ApplicationApproval;
 use App\Models\Calculation;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -86,6 +88,27 @@ class WorkflowController extends Controller
             if (!$isApproved) {
                 // Rejected — whole application rejected
                 $application->update(['status' => 'rejected', 'current_step' => null]);
+                $roleLabel = ApplicationApproval::ROLE_LABELS[$approval->step_role] ?? $approval->step_role;
+                // Notify applicant
+                if ($application->applicant_id) {
+                    Notification::send(
+                        $application->applicant_id,
+                        Notification::TYPE_APP_REJECTED,
+                        'Arizangiz rad etildi',
+                        'Ariza ' . $approval->step_role . ' bosqichida rad etildi' . ($data['comments'] ? ': ' . $data['comments'] : '.'),
+                        [], $user->id, 'application', $application->id
+                    );
+                }
+                // Notify all admins
+                User::where('role', 'admin')->each(function ($admin) use ($application, $user, $roleLabel, $data) {
+                    Notification::send(
+                        $admin->id,
+                        Notification::TYPE_APP_REJECTED,
+                        $application->number . ': Rad etildi',
+                        $roleLabel . ' tomonidan rad etildi' . ($data['comments'] ? ': ' . $data['comments'] : '.'),
+                        [], $user->id, 'application', $application->id
+                    );
+                });
                 return;
             }
 
@@ -101,9 +124,61 @@ class WorkflowController extends Controller
                     'status'       => $this->statusForStep($nextApproval->step_role),
                     'current_step' => $nextApproval->step_role,
                 ]);
+                $roleLabel = ApplicationApproval::ROLE_LABELS[$approval->step_role] ?? $approval->step_role;
+                $nextLabel = ApplicationApproval::ROLE_LABELS[$nextApproval->step_role] ?? $nextApproval->step_role;
+                // Notify applicant of progress
+                if ($application->applicant_id) {
+                    Notification::send(
+                        $application->applicant_id,
+                        Notification::TYPE_STEP_APPROVED,
+                        'Ariza bosqichdan o\'tdi',
+                        $roleLabel . ' bosqichi tasdiqlandi. Ariza keyingi bosqichga o\'tdi.',
+                        [], $user->id, 'application', $application->id
+                    );
+                }
+                // Notify next step assignee
+                if ($nextApproval->assigned_to) {
+                    Notification::send(
+                        $nextApproval->assigned_to,
+                        Notification::TYPE_STEP_APPROVED,
+                        'Ko\'rib chiqish navbati sizda: ' . $application->number,
+                        $application->number . ' ariza ' . $nextLabel . ' bosqichi uchun sizga yuklandi.',
+                        [], $user->id, 'application', $application->id
+                    );
+                }
+                // Notify admins of step progress
+                User::where('role', 'admin')->each(function ($admin) use ($application, $user, $roleLabel, $nextLabel) {
+                    Notification::send(
+                        $admin->id,
+                        Notification::TYPE_STEP_APPROVED,
+                        $application->number . ': ' . $roleLabel . ' → ' . $nextLabel,
+                        'Bosqich tasdiqlandi. Keyingi: ' . $nextLabel,
+                        [], $user->id, 'application', $application->id
+                    );
+                });
             } else {
                 // All steps done — approved
                 $application->update(['status' => 'approved', 'current_step' => null]);
+                // Notify applicant of final approval
+                if ($application->applicant_id) {
+                    Notification::send(
+                        $application->applicant_id,
+                        Notification::TYPE_APP_APPROVED,
+                        'Arizangiz tasdiqlandi! 🎉',
+                        'Ariza ' . $application->number . ' barcha bosqichlardan muvaffaqiyatli o\'tdi va tasdiqlandi.',
+                        [], $user->id, 'application', $application->id
+                    );
+                }
+                // Notify all admins of final approval
+                User::where('role', 'admin')->each(function ($admin) use ($application, $user) {
+                    Notification::send(
+                        $admin->id,
+                        Notification::TYPE_APP_APPROVED,
+                        $application->number . ': Tasdiqlandi ✅',
+                        'Ariza barcha bosqichlardan o\'tdi va yakunlandi.',
+                        [], $user->id, 'application', $application->id
+                    );
+                });
             }
         });
 

@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\ApplicationDocumentController;
 use App\Http\Controllers\DalolatnomaController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EImzoAuthController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkflowController;
 use Illuminate\Support\Facades\Route;
 
@@ -65,6 +68,34 @@ Route::middleware('auth')->group(function () {
     // Dalolatnoma E-IMZO signing (commission members only)
     Route::post('/applications/{application}/dalolatnoma/sign', [DalolatnomaController::class, 'sign'])
         ->name('dalolatnoma.sign');
+
+    // ─── Notifications ───
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.json');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::get('/notifications/page', [NotificationController::class, 'page'])->name('notifications.page');
+
+    // ─── Profile ───
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
+    Route::delete('/profile/sessions/{session}', [ProfileController::class, 'terminateSession'])->name('profile.session.terminate');
+    Route::post('/profile/sessions/terminate-all', [ProfileController::class, 'terminateAllSessions'])->name('profile.sessions.terminate-all');
+
+    // ─── IT Admin panel ───
+    Route::prefix('admin')->name('admin.')->middleware('admin')->group(function () {
+        Route::get('/', [AdminController::class, 'index'])->name('dashboard');
+        Route::get('/applications', [AdminController::class, 'applications'])->name('applications');
+        Route::get('/users', [AdminController::class, 'users'])->name('users');
+        Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
+        Route::get('/users/{user}/edit', [AdminController::class, 'editUser'])->name('users.edit');
+        Route::patch('/users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
+        Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('users.destroy');
+        Route::post('/users/{user}/force-logout', [AdminController::class, 'forceLogout'])->name('users.force-logout');
+        Route::post('/users/{user}/notify', [AdminController::class, 'sendNotification'])->name('users.notify');
+        Route::post('/users/{user}/toggle-backup', [AdminController::class, 'toggleBackup'])->name('users.toggle-backup');
+        Route::get('/sessions', [AdminController::class, 'sessions'])->name('sessions');
+        Route::get('/roles', [AdminController::class, 'roles'])->name('roles');
+        Route::post('/approvals/{approval}/reassign', [AdminController::class, 'reassignApproval'])->name('approvals.reassign');
+    });
 });
 
 // Public verification routes

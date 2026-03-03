@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Application;
 use App\Models\ApplicationApproval;
 use App\Models\District;
+use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -155,6 +156,38 @@ class ApplicationController extends Controller
 
             return $app;
         });
+
+        // Notify citizen that their application was received
+        Notification::send(
+            $citizen->id,
+            Notification::TYPE_APP_SUBMITTED,
+            'Arizangiz qabul qilindi',
+            'Ariza ' . $app->number . ' muvaffaqiyatli yuborildi va ko\'rib chiqilmoqda.',
+            [], null, 'application', $app->id
+        );
+
+        // Notify all admins about new incoming application
+        User::where('role', 'admin')->each(function ($admin) use ($app) {
+            Notification::send(
+                $admin->id,
+                Notification::TYPE_APP_SUBMITTED,
+                'Yangi ariza qabul qilindi',
+                $app->number . ' — ' . ($app->applicant->name ?? '') . ' · ' . ($app->district->name_uz ?? ''),
+                [], null, 'application', $app->id
+            );
+        });
+
+        // Notify the first step assignee (moderator)
+        $firstStep = $app->approvals()->where('step_order', 1)->first();
+        if ($firstStep && $firstStep->assigned_to) {
+            Notification::send(
+                $firstStep->assigned_to,
+                Notification::TYPE_APP_SUBMITTED,
+                'Yangi ariza: ' . $app->number,
+                'Ko\'rib chiqish uchun yangi ariza keldi. Tuman: ' . ($app->district->name_uz ?? '—'),
+                [], null, 'application', $app->id
+            );
+        }
 
         return redirect()->route('apply.success', $app->number);
     }
