@@ -171,7 +171,8 @@ class ApplicationController extends Controller
     public function publicTrack(string $number)
     {
         $application = Application::where('number', $number)
-            ->with(['district', 'applicant', 'approvals.assignee', 'approvals.approver'])
+            ->with(['district', 'applicant', 'approvals.assignee', 'approvals.approver',
+                    'dalolatnomaSignatures.signer'])
             ->firstOrFail();
 
         return view('applications.track', compact('application'));

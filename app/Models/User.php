@@ -63,6 +63,26 @@ class User extends Authenticatable
         return $this->hasMany(Application::class, 'applicant_id');
     }
 
+    public function userSessions(): HasMany
+    {
+        return $this->hasMany(UserSession::class);
+    }
+
+    public function activeSessions(): HasMany
+    {
+        return $this->hasMany(UserSession::class)->where('is_active', true);
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function unreadNotificationsCount(): int
+    {
+        return $this->notifications()->whereNull('read_at')->count();
+    }
+
     public function isCertificateValid(): bool
     {
         if (!$this->certificate_valid_to) return false;

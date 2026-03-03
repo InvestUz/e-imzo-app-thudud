@@ -11,7 +11,9 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             // Roles: consumer, moderator, complaint_officer, lawyer, executor, district_head, admin, regional_backup
             $table->string('role')->default('consumer')->after('name');
-            $table->foreignId('district_id')->nullable()->constrained('districts')->nullOnDelete()->after('role');
+            $table->string('commission_position')->nullable()->after('role');
+            // FK to districts added in 095824 after districts table is created
+            $table->unsignedBigInteger('district_id')->nullable()->after('commission_position');
             $table->boolean('is_regional_backup')->default(false)->after('district_id');
         });
     }
@@ -20,7 +22,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropForeign(['district_id']);
-            $table->dropColumn(['role', 'district_id', 'is_regional_backup']);
+            $table->dropColumn(['role', 'commission_position', 'district_id', 'is_regional_backup']);
         });
     }
 };

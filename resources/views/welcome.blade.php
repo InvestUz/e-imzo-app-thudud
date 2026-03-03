@@ -2,30 +2,45 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Tutash Hudud — Dalolatnoma</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
-        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #eef2f5; min-height: 100vh; display: flex; flex-direction: column; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #eef2f5; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
 
         /* ─── Header ─── */
         .site-header { background: #018c87; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 12px rgba(1,140,135,.25); }
         .site-header .brand { color: #fff; font-size: 1.1rem; font-weight: 800; text-decoration: none; letter-spacing: .02em; }
         .site-header .brand span { font-weight: 400; opacity: .85; font-size: .9rem; }
-        .btn-header { border: 1.5px solid rgba(255,255,255,.4); background: transparent; color: #fff; padding: 7px 20px; border-radius: 8px; font-size: .9rem; cursor: pointer; text-decoration: none; transition: all .2s; }
+        .btn-header { border: 1.5px solid rgba(255,255,255,.4); background: transparent; color: #fff; padding: 7px 20px; border-radius: 8px; font-size: .9rem; cursor: pointer; text-decoration: none; transition: all .2s; display:inline-flex;align-items:center;gap:6px; }
         .btn-header:hover { background: rgba(255,255,255,.15); color: #fff; border-color: #fff; }
+        .header-user { display:flex;align-items:center;gap:10px; }
+        .header-name { color:rgba(255,255,255,.9);font-size:.85rem;font-weight:600; }
+        .btn-logout-sm { border:1.5px solid rgba(255,255,255,.35);background:transparent;color:rgba(255,255,255,.85);padding:5px 13px;border-radius:7px;font-size:.8rem;cursor:pointer;transition:all .2s; }
+        .btn-logout-sm:hover { background:rgba(255,255,255,.15);color:#fff;border-color:#fff; }
 
         /* ─── Page ─── */
         .main { flex: 1; display: flex; justify-content: center; padding: 28px 16px 40px; }
         .page-wrap { width: 100%; max-width: 880px; }
 
         /* ─── Quick cards (login / track) ─── */
-        .quick-card { background: #fff; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,.06); overflow: hidden; }
-        .quick-row { padding: 15px 24px; border-bottom: 1px solid #f0f2f5; }
-        .quick-row:last-child { border-bottom: none; }
+        /* ─── Compact utility bar (login + track) ─── */
+        .util-bar { background:#fff; border-radius:14px; box-shadow:0 2px 12px rgba(0,0,0,.06); display:flex; align-items:stretch; overflow:hidden; }
+        .util-login { display:flex; align-items:center; gap:10px; padding:13px 20px; text-decoration:none; color:#15191e; flex-shrink:0; transition:background .15s; border-right:1px solid #f0f2f5; }
+        .util-login:hover { background:#f0faf9; }
+        .util-login-icon { font-size:1.5rem; line-height:1; }
+        .util-login strong { display:block; font-size:.88rem; color:#018c87; line-height:1.25; white-space:nowrap; }
+        .util-login small  { font-size:.72rem; color:#94a3b8; display:block; white-space:nowrap; }
+        .util-track { flex:1; padding:11px 18px; display:flex; flex-direction:column; justify-content:center; }
+        .util-track-lbl { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#94a3b8; margin-bottom:5px; }
+        .util-track-row { display:flex; gap:7px; }
+        .util-track-row input { flex:1; border:1.5px solid #dde3ee; border-radius:8px; padding:7px 11px; font-size:.88rem; color:#2c3e60; outline:none; min-width:0; background:#fafbfd; }
+        .util-track-row input:focus { border-color:#018c87; box-shadow:0 0 0 3px rgba(1,140,135,.1); background:#fff; }
+        .util-track-row button { white-space:nowrap; padding:7px 16px; background:#018c87; color:#fff; border:none; border-radius:8px; font-size:.88rem; font-weight:600; cursor:pointer; transition:background .15s; }
+        .util-track-row button:hover { background:#017570; }
         .form-control, .form-select { border: 1.5px solid #dde3ee; border-radius: 8px; padding: 9px 13px; font-size: .92rem; color: #2c3e60; transition: border-color .2s, box-shadow .2s; }
         .form-control:focus, .form-select:focus { border-color: #018c87; box-shadow: 0 0 0 3px rgba(1,140,135,.1); outline: none; }
 
@@ -126,16 +141,91 @@
         #modal-sign-btn:hover:not(:disabled) { background: #017570; border-color: #017570; }
         #modal-sign-btn:disabled { opacity: .45; cursor: not-allowed; }
         #modal-sign-btn.signing { opacity: .7; cursor: wait; }
+        /* Full-screen modal on small phones */
+        @media (max-width: 480px) {
+            .modal-dialog { margin: 0; max-width: 100%; }
+            .modal-content { border-radius: 0; min-height: 100dvh; display: flex; flex-direction: column; }
+            .modal-body { flex: 1; overflow-y: auto; }
+            #eimzo-keys-list { max-height: calc(100dvh - 200px); }
+        }
 
         /* Footer */
         .site-footer { text-align: center; padding: 18px; font-size: .8rem; color: #8a9ab8; }
 
-        /* Responsive */
-        @media (max-width: 640px) {
-            .dalo-doc { padding: 20px 14px; }
-            .dalo-body { grid-template-columns: 1fr; }
-            .dalo-right-col { border-left: none; border-top: 1px solid #e2e8f0; padding-left: 0; padding-top: 14px; margin-top: 4px; }
-            .dalo-2col { grid-template-columns: 1fr; }
+        /* ─── Responsive ─── */
+
+        /* Tablet: 2-col still, but tighter */
+        @media (max-width: 768px) {
+            .site-header { padding: 12px 18px; }
+            .site-header .brand span { display: none; }
+            .dalo-doc { padding: 26px 22px; }
+            .dalo-body { gap: 18px; }
+            .dalo-right-col { padding-left: 14px; }
+            .dalo-2col { gap: 8px; }
+        }
+
+        /* Phone: single column, larger touch targets, 16px inputs (prevents iOS zoom) */
+        @media (max-width: 560px) {
+            .main { padding: 14px 10px 32px; }
+            .page-wrap { padding: 0; }
+
+            /* Header */
+            .site-header { padding: 11px 14px; }
+            .site-header .brand { font-size: .95rem; }
+            .site-header .brand span { display: none; }
+            .btn-header { padding: 6px 14px; font-size: .82rem; }
+
+            /* Utility bar */
+            .util-bar { flex-direction: column; }
+            .util-login { border-right: none; border-bottom: 1px solid #f0f2f5; padding: 12px 16px; }
+            .util-track { padding: 11px 16px; }
+            .util-track-row input { font-size: 1rem; }
+            .form-control { font-size: 1rem; }
+
+            /* Document */
+            .dalo-doc { padding: 18px 14px 20px; }
+            .dalo-emblem { height: 44px; margin-bottom: 8px; }
+            .dalo-title { font-size: 1.05rem; }
+            .dalo-subtitle { font-size: .68rem; }
+            .dalo-meta { flex-direction: column; align-items: center; gap: 2px; font-size: .79rem; margin-top: 10px; }
+            .dalo-intro { font-size: .84rem; line-height: 1.65; }
+
+            /* Single column body */
+            .dalo-body { grid-template-columns: 1fr; gap: 0; }
+            .dalo-right-col { border-left: none; border-top: 1px solid #e2e8f0; padding-left: 0; padding-top: 16px; margin-top: 8px; }
+
+            /* Section boxes */
+            .dalo-section { padding: 10px 11px; margin-bottom: 12px; }
+            .dalo-sec-title { font-size: .7rem; margin-bottom: 8px; }
+            .dalo-2col { grid-template-columns: 1fr; gap: 0; }
+
+            /* Field rows: stack label above input */
+            .dalo-field-row { flex-direction: column; align-items: stretch; gap: 3px; margin-bottom: 11px; }
+            .dalo-lbl { white-space: normal; font-weight: 600; font-size: .82rem; }
+
+            /* 16px min font on all inputs to prevent iOS auto-zoom */
+            .dalo-input       { font-size: 1rem; padding: 6px 4px; min-height: 36px; }
+            .dalo-input-xs    { max-width: 100%; }
+            .dalo-select      { font-size: 1rem; padding: 6px 4px; min-height: 36px; }
+            .dalo-full-inp    { font-size: 1rem; padding: 7px 5px; min-height: 36px; }
+            .dalo-textarea    { font-size: 1rem; min-height: 50px; }
+            .dalo-fblock label { font-size: .82rem; }
+
+            /* Section III */
+            .dalo-sig-row { flex-direction: column; gap: 8px; }
+            .dalo-sig-blk:last-child { text-align: left; }
+            .btn-dalo { font-size: .95rem; padding: 13px; }
+
+            /* Commission slots */
+            .dalo-comm-title { font-size: .7rem; }
+            .dalo-comm-name  { font-size: .8rem; }
+        }
+
+        /* Very small phones */
+        @media (max-width: 380px) {
+            .site-header .brand { font-size: .85rem; }
+            .dalo-doc { padding: 14px 11px; }
+            .dalo-title { font-size: .95rem; }
         }
     </style>
 </head>
@@ -143,42 +233,49 @@
 
 <header class="site-header">
     <a href="{{ route('home') }}" class="brand">TUTASH HUDUDLAR <span>— VM 478 asosida</span></a>
-    <a href="{{ route('login') }}" class="btn-header">Xodimlar uchun kirish</a>
+    @auth
+        <div class="header-user">
+            <span class="header-name">{{ auth()->user()->name }}</span>
+            @if(auth()->user()->isConsumer())
+                <a href="{{ route('my-applications') }}" class="btn-header">Arizalarim</a>
+            @else
+                <a href="{{ route('dashboard') }}" class="btn-header">Boshqaruv paneli</a>
+            @endif
+            <form method="POST" action="{{ route('logout') }}" style="display:inline">
+                @csrf
+                <button type="submit" class="btn-logout-sm">Chiqish</button>
+            </form>
+        </div>
+    @else
+        <a href="{{ route('login') }}" class="btn-header">🔑 Kirish</a>
+    @endauth
 </header>
 
 <main class="main">
 <div class="page-wrap">
 
-    {{-- Login / Track quick bar --}}
-    <div class="quick-card mb-3">
-        <div class="quick-row">
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                <div>
-                    <div style="font-size:.88rem;font-weight:700;color:#1a2d5a;margin-bottom:2px">Avval ariza bergansizmi?</div>
-                    <div style="font-size:.78rem;color:#8a9ab8">E-IMZO bilan kiring va barcha arizalaringizni ko'ring</div>
-                </div>
-                <a href="{{ route('login') }}"
-                   style="display:inline-flex;align-items:center;gap:6px;padding:9px 20px;background:#018c87;color:#fff;border-radius:10px;font-size:.88rem;font-weight:600;text-decoration:none;white-space:nowrap">
-                    🔑 E-IMZO bilan kirish
-                </a>
-            </div>
-        </div>
-        <div class="quick-row">
-            <div style="font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#94a3b8;margin-bottom:8px">Ariza holatini tekshirish</div>
+    {{-- Compact utility bar: login left | track right --}}
+    {{-- <div class="util-bar mb-3">
+        <a href="{{ route('login') }}" class="util-login">
+            <span class="util-login-icon">🔑</span>
+            <span>
+                <strong>E-IMZO Kirish</strong>
+                <small>Arizalarimni ko'rish</small>
+            </span>
+        </a>
+        <div class="util-track">
+            <div class="util-track-lbl">Ariza holatini tekshirish</div>
             @if($errors->has('number'))
-                <div class="text-danger small mb-2">{{ $errors->first('number') }}</div>
+                <div class="text-danger" style="font-size:.75rem;margin-bottom:4px">{{ $errors->first('number') }}</div>
             @endif
-            <form method="GET" action="{{ route('apply.track.search') }}" class="d-flex gap-2">
-                <input type="text" name="number" class="form-control"
-                    placeholder="Ariza raqami (masalan: ARZ-2026-0001)"
+            <form method="GET" action="{{ route('apply.track.search') }}" class="util-track-row">
+                <input type="text" name="number"
+                    placeholder="ARZ-2026-0001"
                     value="{{ old('number', request('number')) }}">
-                <button type="submit"
-                    style="white-space:nowrap;padding:9px 20px;background:#018c87;color:#fff;border:none;border-radius:8px;font-size:.9rem;font-weight:600;cursor:pointer">
-                    Tekshirish
-                </button>
+                <button type="submit">Tekshirish</button>
             </form>
         </div>
-    </div>
+    </div> --}}
 
     @if($errors->any() && !$errors->has('number'))
     <div class="alert alert-danger alert-dismissible fade show mb-3" style="border-radius:12px">
@@ -346,7 +443,7 @@
                             </div>
                         </div>
                         <button type="button" class="btn-dalo" onclick="openSignModal()">
-                            🔑 E-IMZO orqali ariza yuborish
+                         Ariza yuborish
                         </button>
                         <div class="dalo-submit-hint">Ariza yuborishdan oldin elektron imzo bilan tasdiqlanadi</div>
                     </div>
@@ -449,6 +546,23 @@ function openSignModal() {
     if (errEl) errEl.style.display = 'none';
     new bootstrap.Modal(document.getElementById('eimzo-modal')).show();
 }
+
+// Cadastral number auto-formatting  (e.g. 10:01:00:00:0001)
+(function() {
+    var inp = document.getElementById('cadastral_number');
+    if (!inp) return;
+    inp.addEventListener('input', function(e) {
+        var raw = e.target.value.replace(/:/g, '');
+        var parts = [];
+        var rest  = raw;
+        for (var i = 0; i < 5 && rest.length > 0; i++) {
+            parts.push(rest.substring(0, 2));
+            rest = rest.substring(2);
+        }
+        if (rest.length > 0) parts.push(rest);
+        e.target.value = parts.join(':');
+    });
+})();
 
 // Clear invalid state on change
 document.getElementById('district_id').addEventListener('change', function() {

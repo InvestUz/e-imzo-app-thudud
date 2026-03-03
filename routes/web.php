@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Route;
 
 // ─── Public: homepage + citizen application form (no auth required) ───
 Route::get('/', [ApplicationController::class, 'publicHome'])->name('home');
+Route::get('/home', fn() => redirect('/'));
 Route::post('/apply', [ApplicationController::class, 'publicStore'])->name('apply');
 Route::get('/apply/success/{number}', [ApplicationController::class, 'publicSuccess'])->name('apply.success');
 Route::get('/apply/track/{number}', [ApplicationController::class, 'publicTrack'])->name('apply.track');

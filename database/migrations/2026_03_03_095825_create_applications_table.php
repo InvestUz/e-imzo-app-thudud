@@ -22,6 +22,7 @@ return new class extends Migration
             // Application source
             $table->enum('source', ['online', 'written'])->default('online');
             $table->text('description')->nullable();
+            $table->json('form_data')->nullable();   // Dalolatnoma extra fields (street, business, etc.)
 
             // Status tracking
             // pending → moderator_review → complaint_review → legal_review → executor_review → head_review → approved/rejected

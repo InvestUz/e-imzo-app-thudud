@@ -8,16 +8,12 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            // commission_position e.g. hokim_qurilish, qurilish, ekologiya, etc.
-            $table->string('commission_position')->nullable()->after('role');
-        });
+        // commission_position is now added in 2026_03_03_095823_add_role_district_to_users_table
+        // This migration is kept as a no-op to preserve migration history
     }
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('commission_position');
-        });
+        // no-op
     }
 };

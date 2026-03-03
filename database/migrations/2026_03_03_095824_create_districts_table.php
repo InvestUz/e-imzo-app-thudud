@@ -16,10 +16,18 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
+
+        // Now that districts exists, add FK on users.district_id
+        Schema::table('users', function (Blueprint $table) {
+            $table->foreign('district_id')->references('id')->on('districts')->nullOnDelete();
+        });
     }
 
     public function down(): void
     {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropForeign(['district_id']);
+        });
         Schema::dropIfExists('districts');
     }
 };
